@@ -187,34 +187,60 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--secondary-pink), var(--primary-purple));
-            border: none;
+            background: var(--secondary-pink);
+            border: 2px solid white;
             color: white;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, var(--accent-rose), var(--secondary-pink));
+            background: var(--accent-rose);
+            border: 2px solid white;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(212, 80, 107, 0.4);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #8b4a9e, #6b3d7a);
-            border: none;
+            background: #8b4a9e;
+            border: 2px solid white;
+            color: white;
         }
 
         .btn-success:hover {
-            background: linear-gradient(135deg, #9e6b8b, #8b4a9e);
+            background: #9e6b8b;
+            border: 2px solid white;
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #a83d55, #7a2d3d);
-            border: none;
+            background: #a83d55;
+            border: 2px solid white;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c44a66;
+            border: 2px solid white;
         }
 
         .btn-info {
-            background: linear-gradient(135deg, #d4a56b, #a8835d);
-            border: none;
+            background: #d4a56b;
+            border: 2px solid white;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #e8b87f;
+            border: 2px solid white;
+        }
+
+        .btn-warning {
+            background: #d4a56b;
+            border: 2px solid white;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #e8b87f;
+            border: 2px solid white;
         }
 
         .log-container {
@@ -318,10 +344,41 @@
             const peerRef = useRef(null);
             const connRef = useRef(null);
             const qrRef = useRef(null);
+            const previousTurnRef = useRef(null);
 
             const addLog = (message) => {
                 const time = new Date().toLocaleTimeString();
                 setLogs(prev => [...prev, { time, message }]);
+            };
+
+            const playNotificationSound = () => {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // Create two short beeps
+                    const beep = (time, frequency) => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+
+                        oscillator.frequency.value = frequency;
+                        oscillator.type = 'sine';
+
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + time);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + time + 0.1);
+
+                        oscillator.start(audioContext.currentTime + time);
+                        oscillator.stop(audioContext.currentTime + time + 0.1);
+                    };
+
+                    // Two quick beeps
+                    beep(0, 800);
+                    beep(0.15, 1000);
+                } catch (err) {
+                    console.log('Could not play notification sound:', err);
+                }
             };
 
             // Get or create unique device ID
@@ -617,6 +674,22 @@
                     saveSession(sessionId, isPlayer1, gameState);
                 }
             }, [gameState]);
+
+            // Play notification sound when it becomes your turn
+            useEffect(() => {
+                if (gameState && connected) {
+                    const currentTurn = isMyTurn();
+                    const previousTurn = previousTurnRef.current;
+
+                    // If it just became your turn (was false, now true)
+                    if (currentTurn && previousTurn === false) {
+                        playNotificationSound();
+                    }
+
+                    // Update the ref
+                    previousTurnRef.current = currentTurn;
+                }
+            }, [gameState?.currentTurn, connected]);
 
             const setupConnection = (conn, asPlayer1) => {
                 conn.on('open', () => {
@@ -1140,7 +1213,10 @@
                 React.createElement('div', { className: 'd-flex justify-content-between align-items-center mb-4' },
                     React.createElement('h1', { className: 'mb-0' },
                         connected && gameState
-                            ? `🎴 The GAME - ${isPlayer1 ? 'P1' : 'P2'}`
+                            ? React.createElement('span', null,
+                                '🎴 The GAME - ',
+                                React.createElement('span', { style: { color: 'white' } }, isPlayer1 ? 'P1' : 'P2')
+                            )
                             : '🎴 The GAME'
                     ),
                     connected && gameState && isPlayer1 && React.createElement('button', {
@@ -1190,7 +1266,7 @@
 
                     React.createElement('div', { className: 'card' },
                         React.createElement('div', { className: 'card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2' },
-                            React.createElement('h5', { className: 'mb-0' },
+                            React.createElement('h5', { className: 'mb-0', style: isMyTurn() ? { color: 'white' } : {} },
                                 isMyTurn() ? '🎴 Your Turn' : '⏳ Opponent\'s Turn'
                             ),
                             React.createElement('div', { className: 'fs-5 fw-bold' },
