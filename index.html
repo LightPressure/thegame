@@ -57,14 +57,18 @@
                 if (!deviceId) {
                     deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
                     localStorage.setItem('deviceId', deviceId);
+                    console.log('[SESSION] Created new device ID:', deviceId);
+                } else {
+                    console.log('[SESSION] Existing device ID:', deviceId);
                 }
                 return deviceId;
             };
 
             // Save session to localStorage with device ID
             const saveSession = (peerId, isP1, gState) => {
+                const deviceId = getDeviceId();
                 const session = {
-                    deviceId: getDeviceId(),
+                    deviceId,
                     peerId,
                     isPlayer1: isP1,
                     gameState: gState,
@@ -72,33 +76,73 @@
                 };
                 localStorage.setItem('gameSession', JSON.stringify(session));
                 setSessionId(peerId);
+                console.log('[SESSION] Saved:', {
+                    deviceId,
+                    peerId,
+                    isPlayer1: isP1,
+                    hasGameState: !!gState,
+                    queueLength: gState?.queue?.length || 0,
+                    timestamp: new Date(session.timestamp).toLocaleTimeString()
+                });
+                addLog(`💾 Session saved (P${isP1 ? '1' : '2'}, Queue: ${gState?.queue?.length || 0})`);
             };
 
             // Load session from localStorage
             const loadSession = () => {
+                console.log('[SESSION] Loading session from localStorage...');
                 const saved = localStorage.getItem('gameSession');
-                if (saved) {
-                    const session = JSON.parse(saved);
-                    // Check if this is the same device
-                    if (session.deviceId !== getDeviceId()) {
-                        addLog('Different device detected, clearing session');
-                        localStorage.removeItem('gameSession');
-                        return null;
-                    }
-                    // Session expires after 24 hours
-                    if (Date.now() - session.timestamp < 24 * 60 * 60 * 1000) {
-                        return session;
-                    }
-                    localStorage.removeItem('gameSession');
+                if (!saved) {
+                    console.log('[SESSION] No saved session found');
+                    addLog('📂 No previous session found');
+                    return null;
                 }
+
+                const session = JSON.parse(saved);
+                const currentDeviceId = getDeviceId();
+                console.log('[SESSION] Found session:', {
+                    savedDeviceId: session.deviceId,
+                    currentDeviceId,
+                    match: session.deviceId === currentDeviceId,
+                    peerId: session.peerId,
+                    isPlayer1: session.isPlayer1,
+                    hasGameState: !!session.gameState,
+                    queueLength: session.gameState?.queue?.length || 0,
+                    savedAt: new Date(session.timestamp).toLocaleString()
+                });
+
+                // Check if this is the same device
+                if (session.deviceId !== currentDeviceId) {
+                    console.warn('[SESSION] Device mismatch - clearing session');
+                    addLog('⚠️ Different device detected, clearing session');
+                    localStorage.removeItem('gameSession');
+                    return null;
+                }
+
+                // Session expires after 24 hours
+                const age = Date.now() - session.timestamp;
+                const ageHours = (age / (1000 * 60 * 60)).toFixed(1);
+                console.log('[SESSION] Session age:', ageHours, 'hours');
+
+                if (age < 24 * 60 * 60 * 1000) {
+                    addLog(`✅ Loaded session (${ageHours}h old, Queue: ${session.gameState?.queue?.length || 0})`);
+                    return session;
+                }
+
+                console.warn('[SESSION] Session expired - clearing');
+                addLog('⏰ Session expired (>24h old)');
+                localStorage.removeItem('gameSession');
                 return null;
             };
 
             // Clear session
             const clearSession = () => {
+                console.log('[SESSION] Clearing session and starting new game');
+                addLog('🔄 Starting new game...');
                 localStorage.removeItem('gameSession');
                 setSessionId(null);
-                window.location.href = window.location.pathname;
+                setTimeout(() => {
+                    window.location.href = window.location.pathname;
+                }, 500);
             };
 
             // Initialize game state
@@ -128,34 +172,42 @@
             };
 
             useEffect(() => {
+                console.log('[INIT] Starting initialization...');
                 const urlParams = new URLSearchParams(window.location.search);
                 let peerId = urlParams.get('peer');
+                console.log('[INIT] URL peer ID:', peerId || '(none)');
 
                 // Try to load saved session
                 const savedSession = loadSession();
 
                 // If no peer ID in URL but we have a saved session for Player 2, restore it
                 if (!peerId && savedSession && !savedSession.isPlayer1 && savedSession.peerId) {
+                    console.log('[INIT] Player 2 refresh detected - restoring URL');
                     peerId = savedSession.peerId;
                     // Redirect to the proper URL with peer ID
                     window.history.replaceState({}, '', `${window.location.pathname}?peer=${peerId}`);
-                    addLog('Restoring Player 2 session...');
+                    addLog('🔄 Restoring Player 2 session...');
                 }
 
                 if (!peerId) {
                     // Player 1: Create peer and wait for connection
+                    console.log('[INIT] No peer ID in URL - initializing as Player 1');
                     setIsPlayer1(true);
 
                     // Try to reuse the same peer ID from saved session
                     let savedPeerId = null;
                     if (savedSession && savedSession.isPlayer1 && savedSession.peerId) {
                         savedPeerId = savedSession.peerId;
-                        addLog('Restoring previous session...');
+                        console.log('[INIT] Attempting to reuse Player 1 peer ID:', savedPeerId);
+                        addLog(`🔄 Restoring Player 1 session (ID: ${savedPeerId.substring(0, 8)}...)`);
                         if (savedSession.gameState) {
+                            console.log('[INIT] Restoring game state for Player 1');
                             setGameState(savedSession.gameState);
+                            addLog(`✅ Game state restored (Queue: ${savedSession.gameState.queue.length})`);
                         }
                     } else {
-                        addLog('Initializing as Player 1...');
+                        console.log('[INIT] No saved session - creating new Player 1');
+                        addLog('🆕 Initializing as Player 1...');
                     }
 
                     const peer = new Peer(savedPeerId, {
@@ -170,13 +222,23 @@
                     peerRef.current = peer;
 
                     peer.on('open', (id) => {
-                        addLog(`Peer created with ID: ${id}`);
+                        console.log('[PEER] Player 1 peer opened with ID:', id);
+                        addLog(`✅ Peer created with ID: ${id.substring(0, 8)}...`);
                         const link = `${window.location.origin}${window.location.pathname}?peer=${id}`;
                         setGameLink(link);
                         setStatus('waiting');
                         setSessionId(id);
-                        addLog('Waiting for Player 2 to connect...');
-                        addLog('Share the link below to invite them!');
+
+                        if (savedPeerId && id === savedPeerId) {
+                            console.log('[PEER] Successfully reused peer ID');
+                            addLog('✅ Session restored with same peer ID');
+                        } else if (savedPeerId) {
+                            console.warn('[PEER] Peer ID changed! Old:', savedPeerId, 'New:', id);
+                            addLog('⚠️ New peer ID assigned (old one unavailable)');
+                        }
+
+                        addLog('⏳ Waiting for Player 2 to connect...');
+                        addLog('📤 Share the link below to invite them!');
 
                         // Generate QR code
                         setTimeout(() => {
@@ -195,35 +257,42 @@
                     });
 
                     peer.on('connection', (conn) => {
-                        addLog('Player 2 is connecting...');
+                        console.log('[PEER] Player 2 is connecting...');
+                        addLog('🔗 Player 2 is connecting...');
                         connRef.current = conn;
                         setupConnection(conn, true);
                     });
 
                     peer.on('error', (err) => {
-                        addLog(`Error: ${err.message}`);
+                        console.error('[PEER] Error:', err.type, err.message);
+                        addLog(`❌ Error: ${err.message}`);
                         // If peer ID is already taken, try with a new one
                         if (err.type === 'unavailable-id' || err.type === 'invalid-id') {
-                            addLog('Peer ID unavailable, creating new session...');
+                            console.warn('[PEER] Peer ID unavailable, clearing session and reloading');
+                            addLog('⚠️ Peer ID unavailable, creating new session...');
                             localStorage.removeItem('gameSession');
-                            window.location.reload();
+                            setTimeout(() => window.location.reload(), 1000);
                         }
                     });
 
                 } else {
                     // Player 2: Connect to Player 1
+                    console.log('[INIT] Peer ID in URL - initializing as Player 2');
                     setIsPlayer1(false);
                     setStatus('connecting');
 
                     // Restore game state if exists
                     if (savedSession && !savedSession.isPlayer1 && savedSession.gameState) {
-                        addLog('Restoring Player 2 session...');
+                        console.log('[INIT] Restoring game state for Player 2');
+                        addLog(`🔄 Restoring Player 2 session (Queue: ${savedSession.gameState.queue.length})`);
                         setGameState(savedSession.gameState);
                     } else {
-                        addLog('Initializing as Player 2...');
+                        console.log('[INIT] No saved session for Player 2 - connecting fresh');
+                        addLog('🆕 Initializing as Player 2...');
                     }
 
                     // Save peer ID for reconnection
+                    console.log('[INIT] Saving Player 2 peer ID:', peerId);
                     saveSession(peerId, false, savedSession?.gameState || null);
                     setSessionId(peerId);
 
@@ -239,19 +308,22 @@
                     peerRef.current = peer;
 
                     peer.on('open', () => {
-                        addLog('Peer initialized');
-                        addLog(`Connecting to Player 1 (ID: ${peerId})...`);
+                        console.log('[PEER] Player 2 peer initialized');
+                        addLog('✅ Peer initialized');
+                        addLog(`🔗 Connecting to Player 1 (ID: ${peerId.substring(0, 8)}...)...`);
 
                         const conn = peer.connect(peerId, {
                             reliable: true
                         });
 
+                        console.log('[PEER] Player 2 attempting connection to Player 1');
                         connRef.current = conn;
                         setupConnection(conn, false);
                     });
 
                     peer.on('error', (err) => {
-                        addLog(`Error: ${err.message}`);
+                        console.error('[PEER] Player 2 error:', err.type, err.message);
+                        addLog(`❌ Error: ${err.message}`);
                     });
                 }
 
@@ -268,30 +340,40 @@
             // Auto-save game state changes for BOTH players
             useEffect(() => {
                 if (gameState && sessionId) {
+                    console.log('[AUTO-SAVE] Saving game state change');
                     saveSession(sessionId, isPlayer1, gameState);
                 }
             }, [gameState]);
 
             const setupConnection = (conn, asPlayer1) => {
                 conn.on('open', () => {
-                    addLog('Connection opened!');
-                    addLog('ICE route finding complete');
+                    console.log('[CONNECTION] Connection opened! Player:', asPlayer1 ? 1 : 2);
+                    addLog('✅ Connection opened!');
+                    addLog('✅ ICE route finding complete');
                     setStatus('connected');
                     setConnected(true);
 
                     if (asPlayer1) {
                         // Player 1 initializes the game or uses saved state
+                        console.log('[CONNECTION] Player 1 checking for existing game state');
                         let initialState = gameState;
                         if (!initialState) {
+                            console.log('[CONNECTION] No game state - initializing new game');
                             initialState = initializeGame(true);
                             setGameState(initialState);
+                            addLog('🎮 New game initialized');
+                        } else {
+                            console.log('[CONNECTION] Using existing game state (Queue:', initialState.queue.length, ')');
+                            addLog(`🎮 Resuming game (Queue: ${initialState.queue.length})`);
                         }
+                        console.log('[CONNECTION] Sending game state to Player 2');
                         sendGameState(initialState);
                         // Save session
                         saveSession(peerRef.current?.id, true, initialState);
-                        addLog('Game initialized! Player 1 starts.');
+                        addLog('✅ Player 1 starts.');
                     } else {
-                        addLog('Waiting for game initialization...');
+                        console.log('[CONNECTION] Player 2 waiting for game state from Player 1');
+                        addLog('⏳ Waiting for game initialization...');
                     }
                 });
 
@@ -300,13 +382,15 @@
                 });
 
                 conn.on('close', () => {
-                    addLog('Connection closed');
+                    console.log('[CONNECTION] Connection closed');
+                    addLog('❌ Connection closed');
                     setConnected(false);
                     setStatus('disconnected');
                 });
 
                 conn.on('error', (err) => {
-                    addLog(`Connection error: ${err.message}`);
+                    console.error('[CONNECTION] Connection error:', err.message);
+                    addLog(`❌ Connection error: ${err.message}`);
                 });
             };
 
@@ -329,19 +413,24 @@
             };
 
             const handleMessage = (data) => {
+                console.log('[MESSAGE] Received:', data.type);
                 if (data.type === 'gameState') {
+                    console.log('[MESSAGE] Updating game state (Queue:', data.state.queue.length, ')');
                     setGameState(data.state);
                     // Save updated state for BOTH players
                     const peerId = isPlayer1 ? peerRef.current?.id : sessionId;
                     if (peerId) {
+                        console.log('[MESSAGE] Saving received game state for', isPlayer1 ? 'P1' : 'P2');
                         saveSession(peerId, isPlayer1, data.state);
                     }
-                    addLog('Game state updated');
+                    addLog('📥 Game state updated');
                 } else if (data.type === 'action') {
+                    console.log('[MESSAGE] Processing action:', data.action.type);
                     processAction(data.action);
                 } else if (data.type === 'winner') {
+                    console.log('[MESSAGE] Winner declared:', data.winner);
                     setWinner(data.winner === 'opponent' ? 'opponent' : 'me');
-                    addLog(data.winner === 'opponent' ? 'Opponent won!' : 'You won!');
+                    addLog(data.winner === 'opponent' ? '🎉 Opponent won!' : '😔 You won!');
                 }
             };
 
