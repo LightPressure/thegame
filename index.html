@@ -1561,7 +1561,15 @@
                             React.createElement('div', { className: 'modal-body' },
                                 React.createElement('p', null, 'Choose a pleasure card (costs 3 points):'),
                                 React.createElement('div', { className: 'd-flex gap-3 flex-wrap justify-content-center' },
-                                    gameState?.pleasureDeck?.map((card, idx) =>
+                                    (() => {
+                                        // Get unique pleasure cards by name
+                                        const seen = new Set();
+                                        return gameState?.pleasureDeck?.filter(card => {
+                                            if (seen.has(card.name)) return false;
+                                            seen.add(card.name);
+                                            return true;
+                                        }) || [];
+                                    })().map((card, idx) =>
                                         React.createElement('div', {
                                             className: 'game-card card-pleasure',
                                             key: idx,
@@ -1610,7 +1618,15 @@
                             React.createElement('div', { className: 'modal-body' },
                                 React.createElement('p', null, 'Choose an equipment card (costs 3 points):'),
                                 React.createElement('div', { className: 'd-flex gap-3 flex-wrap justify-content-center' },
-                                    gameState?.equipmentDeck?.map((card, idx) =>
+                                    (() => {
+                                        // Get unique equipment by name
+                                        const seen = new Set();
+                                        return gameState?.equipmentDeck?.filter(card => {
+                                            if (seen.has(card.name)) return false;
+                                            seen.add(card.name);
+                                            return true;
+                                        }) || [];
+                                    })().map((card, idx) =>
                                         React.createElement('div', {
                                             className: 'game-card card-equipment',
                                             key: idx,
