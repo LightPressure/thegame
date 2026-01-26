@@ -38,6 +38,8 @@
             const [selectedCards, setSelectedCards] = useState([]);
             const [winner, setWinner] = useState(null);
             const [sessionId, setSessionId] = useState(null);
+            const [showAskDialog, setShowAskDialog] = useState(false);
+            const [askingCardType, setAskingCardType] = useState(null);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
@@ -327,6 +329,14 @@
                         case 'drawPleasure':
                             addLog(`Opponent drew a pleasure card`);
                             break;
+
+                        case 'stealCard':
+                            addLog(`Opponent used Steal Card`);
+                            break;
+
+                        case 'askForCard':
+                            addLog(`Opponent used Ask For Card (${action.requestedType})`);
+                            break;
                     }
 
                     return newState;
@@ -527,6 +537,110 @@
 
                 const action = {
                     type: 'drawEquipment'
+                };
+                sendAction(action);
+            };
+
+            // Handle playing a special card (Steal Card)
+            const handleStealCard = () => {
+                if (!isMyTurn() || selectedCards.length !== 1 || selectedCards[0].type !== 'special' || selectedCards[0].action !== 'steal') return;
+
+                const specialCard = selectedCards[0];
+
+                setGameState(prev => {
+                    const newState = { ...prev };
+                    const playerKey = isPlayer1 ? 'player1' : 'player2';
+                    const opponentKey = isPlayer1 ? 'player2' : 'player1';
+
+                    // Remove special card from hand
+                    newState[playerKey].hand = newState[playerKey].hand.filter(
+                        c => c.id !== specialCard.id
+                    );
+
+                    // Discard the special card
+                    newState.discardPile.push(specialCard);
+
+                    // Steal random card from opponent if they have any
+                    if (newState[opponentKey].hand.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * newState[opponentKey].hand.length);
+                        const stolenCard = newState[opponentKey].hand.splice(randomIndex, 1)[0];
+                        newState[playerKey].hand.push(stolenCard);
+                        addLog(`Stole ${stolenCard.name} from opponent!`);
+                    } else {
+                        addLog('Opponent has no cards to steal');
+                    }
+
+                    // Switch turn
+                    newState.currentTurn = newState.currentTurn === 1 ? 2 : 1;
+
+                    setTimeout(() => {
+                        sendGameState(newState);
+                    }, 50);
+
+                    return newState;
+                });
+
+                setSelectedCards([]);
+
+                const action = {
+                    type: 'stealCard',
+                    cardId: specialCard.id
+                };
+                sendAction(action);
+            };
+
+            // Handle "Ask For Card" - show dialog
+            const handleAskForCard = () => {
+                if (!isMyTurn() || selectedCards.length !== 1 || selectedCards[0].type !== 'special' || selectedCards[0].action !== 'ask') return;
+                setShowAskDialog(true);
+            };
+
+            // Execute ask for card with selected type
+            const executeAskForCard = (cardType) => {
+                if (!cardType) return;
+
+                const specialCard = selectedCards[0];
+
+                setGameState(prev => {
+                    const newState = { ...prev };
+                    const playerKey = isPlayer1 ? 'player1' : 'player2';
+                    const opponentKey = isPlayer1 ? 'player2' : 'player1';
+
+                    // Remove special card from hand
+                    newState[playerKey].hand = newState[playerKey].hand.filter(
+                        c => c.id !== specialCard.id
+                    );
+
+                    // Discard the special card
+                    newState.discardPile.push(specialCard);
+
+                    // Find card of requested type from opponent
+                    const requestedCard = newState[opponentKey].hand.find(c => c.type === cardType);
+                    if (requestedCard) {
+                        newState[opponentKey].hand = newState[opponentKey].hand.filter(c => c.id !== requestedCard.id);
+                        newState[playerKey].hand.push(requestedCard);
+                        addLog(`Received ${requestedCard.name} from opponent!`);
+                    } else {
+                        addLog(`Opponent doesn't have a ${cardType} card`);
+                    }
+
+                    // Switch turn
+                    newState.currentTurn = newState.currentTurn === 1 ? 2 : 1;
+
+                    setTimeout(() => {
+                        sendGameState(newState);
+                    }, 50);
+
+                    return newState;
+                });
+
+                setSelectedCards([]);
+                setShowAskDialog(false);
+
+                const action = {
+                    type: 'askForCard',
+                    cardId: specialCard.id,
+                    requestedType: cardType
                 };
                 sendAction(action);
             };
@@ -765,13 +879,72 @@
                         React.createElement('button', {
                             className: 'btn btn-danger',
                             onClick: handleDiscard,
-                            disabled: !isMyTurn() || selectedCards.length !== 1
+                            disabled: !isMyTurn() || selectedCards.length !== 1 || selectedCards[0].type === 'special'
                         }, '🗑️ Discard'),
+                        React.createElement('button', {
+                            className: 'btn btn-info',
+                            onClick: handleStealCard,
+                            disabled: !isMyTurn() || selectedCards.length !== 1 || selectedCards[0]?.type !== 'special' || selectedCards[0]?.action !== 'steal'
+                        }, '🃏 Steal Card'),
+                        React.createElement('button', {
+                            className: 'btn btn-info',
+                            onClick: handleAskForCard,
+                            disabled: !isMyTurn() || selectedCards.length !== 1 || selectedCards[0]?.type !== 'special' || selectedCards[0]?.action !== 'ask'
+                        }, '❓ Ask For Card'),
                         isPlayer1 && React.createElement('button', {
                             className: 'btn btn-warning',
                             onClick: handleDrawEquipment,
                             disabled: !isMyTurn() || myStats.points < 1 || gameState.queue.length === 0
                         }, '🔧 Add Equipment (1pt)')
+                    ),
+
+                    showAskDialog && React.createElement('div', {
+                        className: 'modal show d-block',
+                        style: { backgroundColor: 'rgba(0,0,0,0.5)' },
+                        onClick: () => setShowAskDialog(false)
+                    },
+                        React.createElement('div', {
+                            className: 'modal-dialog modal-dialog-centered',
+                            onClick: (e) => e.stopPropagation()
+                        },
+                            React.createElement('div', { className: 'modal-content' },
+                                React.createElement('div', { className: 'modal-header' },
+                                    React.createElement('h5', { className: 'modal-title' }, '❓ Ask For Card Type'),
+                                    React.createElement('button', {
+                                        type: 'button',
+                                        className: 'btn-close',
+                                        onClick: () => setShowAskDialog(false)
+                                    })
+                                ),
+                                React.createElement('div', { className: 'modal-body' },
+                                    React.createElement('p', null, 'Choose which type of card to request from your opponent:'),
+                                    React.createElement('div', { className: 'd-grid gap-2' },
+                                        React.createElement('button', {
+                                            className: 'btn btn-primary',
+                                            onClick: () => executeAskForCard('position')
+                                        }, '📍 Position Card'),
+                                        React.createElement('button', {
+                                            className: 'btn btn-danger',
+                                            onClick: () => executeAskForCard('intensity')
+                                        }, '💪 Intensity Card'),
+                                        React.createElement('button', {
+                                            className: 'btn btn-success',
+                                            onClick: () => executeAskForCard('time')
+                                        }, '⏱️ Time Card'),
+                                        React.createElement('button', {
+                                            className: 'btn btn-warning',
+                                            onClick: () => executeAskForCard('special')
+                                        }, '✨ Special Card')
+                                    )
+                                ),
+                                React.createElement('div', { className: 'modal-footer' },
+                                    React.createElement('button', {
+                                        className: 'btn btn-secondary',
+                                        onClick: () => setShowAskDialog(false)
+                                    }, 'Cancel')
+                                )
+                            )
+                        )
                     )
                 )
             );
