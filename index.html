@@ -55,11 +55,11 @@
 
         /* Playing card style */
         .game-card {
-            width: 160px;
-            height: 240px;
+            width: 120px;
+            height: 180px;
             cursor: pointer;
             transition: all 0.3s ease;
-            border-radius: 12px;
+            border-radius: 10px;
             overflow: hidden;
             position: relative;
         }
@@ -107,32 +107,42 @@
             justify-content: center;
             text-align: center;
             padding: 1rem;
+            position: relative;
+        }
+
+        .card-indicator {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            font-size: 1.2rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
         }
 
         .card-emoji {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            margin-bottom: 0.3rem;
         }
 
         .card-type {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.8;
+            letter-spacing: 0.5px;
+            color: white;
             font-weight: 600;
         }
 
         .card-name {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-weight: 700;
-            margin: 0.5rem 0;
-            line-height: 1.2;
+            margin: 0.3rem 0;
+            line-height: 1.1;
+            color: white;
         }
 
         .card-description {
-            font-size: 0.7rem;
-            opacity: 0.85;
-            line-height: 1.3;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.2;
         }
 
         .btn-primary {
@@ -1159,11 +1169,12 @@
                     ),
 
                     React.createElement('div', { className: 'alert alert-warning' },
-                        React.createElement('div', { className: 'fs-5 fw-bold text-warning-emphasis mb-3' },
+                        React.createElement('div', { className: 'fs-5 fw-bold mb-3', style: { color: 'white' } },
                             `🔥 Queue (${gameState.queue.length}/5)`
                         ),
                         gameState.queue.length === 0 && React.createElement('div', {
-                            className: 'text-warning-emphasis fst-italic'
+                            className: 'fst-italic',
+                            style: { color: 'rgba(255, 255, 255, 0.8)' }
                         }, 'No punishments queued yet'),
                         React.createElement('div', { className: 'vstack gap-2' },
                             gameState.queue.map((item, idx) =>
@@ -1222,8 +1233,15 @@
                                     const typeCompare = (typeOrder[a.type] || 5) - (typeOrder[b.type] || 5);
                                     if (typeCompare !== 0) return typeCompare;
                                     return a.name.localeCompare(b.name);
-                                }).map(card =>
-                                    React.createElement('div', {
+                                }).map(card => {
+                                    // Determine indicator emoji based on card type
+                                    let indicator = '';
+                                    if (card.type === 'position') indicator = '1️⃣';
+                                    else if (card.type === 'intensity') indicator = '2️⃣';
+                                    else if (card.type === 'time') indicator = '3️⃣';
+                                    else if (card.type === 'special') indicator = '✨';
+
+                                    return React.createElement('div', {
                                         className: `game-card card-${card.type} ${selectedCards.find(c => c.id === card.id) ? 'selected' : ''}`,
                                         key: card.id,
                                         onClick: () => handleCardClick(card)
@@ -1235,10 +1253,11 @@
                                             card.description && React.createElement('div', { className: 'card-description' }, card.description),
                                             card.duration !== undefined && React.createElement('div', { className: 'card-description' },
                                                 `${card.duration}s`
-                                            )
+                                            ),
+                                            React.createElement('div', { className: 'card-indicator' }, indicator)
                                         )
-                                    )
-                                )
+                                    );
+                                })
                             )
                         )
                     ),
