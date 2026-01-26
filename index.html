@@ -1812,7 +1812,7 @@
                     )
                 ),
 
-                (isPlayer1 ? gameState?.player2?.pleasureCards?.length > 0 : myStats?.pleasureCards?.length > 0) && React.createElement('div', { className: 'card' },
+                connected && gameState && (isPlayer1 ? gameState?.player2?.pleasureCards?.length > 0 : myStats?.pleasureCards?.length > 0) && React.createElement('div', { className: 'card' },
                     React.createElement('div', { className: 'card-header' },
                         React.createElement('h5', { className: 'mb-0' }, isPlayer1 ? '💝 Player 2 Pleasure Cards' : '💝 Your Pleasure Cards')
                     ),
