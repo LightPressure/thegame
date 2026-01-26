@@ -1020,10 +1020,24 @@
                     // Add to discard pile
                     newState.discardPile.push(discardedCard);
 
+                    // Draw a replacement card from main deck
+                    if (newState.mainDeck.length === 0 && newState.discardPile.length > 0) {
+                        console.log('[DISCARD] Main deck empty, reshuffling discard pile');
+                        newState.mainDeck = shuffleDeck([...newState.discardPile]);
+                        newState.discardPile = [];
+                        addLog('♻️ Reshuffled discard pile into deck');
+                    }
+
+                    if (newState.mainDeck.length > 0) {
+                        const drawnCard = newState.mainDeck.shift();
+                        newState[playerKey].hand.push(drawnCard);
+                        addLog(`Discarded: ${discardedCard.name}, drew: ${drawnCard.name}`);
+                    } else {
+                        addLog(`Discarded: ${discardedCard.name}`);
+                    }
+
                     // Switch turn
                     newState.currentTurn = newState.currentTurn === 1 ? 2 : 1;
-
-                    addLog(`Discarded: ${discardedCard.name}`);
 
                     // Send updated state
                     setTimeout(() => {

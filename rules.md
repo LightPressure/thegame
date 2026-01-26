@@ -68,7 +68,7 @@ To complete a set, you need **3 cards**:
 - Use its effect
 
 **Option C - Can't/Won't Play:**
-- If you have 5 or MORE cards: **Discard** 1 card from your hand
+- If you have 5 or MORE cards: **Discard** 1 card and draw 1 replacement from Main Deck
 - If you have LESS than 5 cards: **Draw** 1 card from Main Deck
 
 Turn ends, passes to Player 2
@@ -89,7 +89,7 @@ Turn ends, passes to Player 2
 - Use its effect
 
 **Option C - Can't/Won't Play:**
-- If you have 5 or MORE cards: **Discard** 1 card from your hand
+- If you have 5 or MORE cards: **Discard** 1 card and draw 1 replacement from Main Deck
 - If you have LESS than 5 cards: **Draw** 1 card from Main Deck
 
 Turn ends, passes to Player 1
