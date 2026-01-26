@@ -51,9 +51,20 @@
                 setLogs(prev => [...prev, { time, message }]);
             };
 
-            // Save session to localStorage
+            // Get or create unique device ID
+            const getDeviceId = () => {
+                let deviceId = localStorage.getItem('deviceId');
+                if (!deviceId) {
+                    deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                    localStorage.setItem('deviceId', deviceId);
+                }
+                return deviceId;
+            };
+
+            // Save session to localStorage with device ID
             const saveSession = (peerId, isP1, gState) => {
                 const session = {
+                    deviceId: getDeviceId(),
                     peerId,
                     isPlayer1: isP1,
                     gameState: gState,
@@ -68,6 +79,12 @@
                 const saved = localStorage.getItem('gameSession');
                 if (saved) {
                     const session = JSON.parse(saved);
+                    // Check if this is the same device
+                    if (session.deviceId !== getDeviceId()) {
+                        addLog('Different device detected, clearing session');
+                        localStorage.removeItem('gameSession');
+                        return null;
+                    }
                     // Session expires after 24 hours
                     if (Date.now() - session.timestamp < 24 * 60 * 60 * 1000) {
                         return session;
@@ -185,16 +202,29 @@
 
                     peer.on('error', (err) => {
                         addLog(`Error: ${err.message}`);
+                        // If peer ID is already taken, try with a new one
+                        if (err.type === 'unavailable-id' || err.type === 'invalid-id') {
+                            addLog('Peer ID unavailable, creating new session...');
+                            localStorage.removeItem('gameSession');
+                            window.location.reload();
+                        }
                     });
 
                 } else {
                     // Player 2: Connect to Player 1
                     setIsPlayer1(false);
-                    addLog('Initializing as Player 2...');
                     setStatus('connecting');
 
+                    // Restore game state if exists
+                    if (savedSession && !savedSession.isPlayer1 && savedSession.gameState) {
+                        addLog('Restoring Player 2 session...');
+                        setGameState(savedSession.gameState);
+                    } else {
+                        addLog('Initializing as Player 2...');
+                    }
+
                     // Save peer ID for reconnection
-                    saveSession(peerId, false, null);
+                    saveSession(peerId, false, savedSession?.gameState || null);
                     setSessionId(peerId);
 
                     const peer = new Peer({
@@ -235,9 +265,9 @@
                 };
             }, []);
 
-            // Auto-save game state changes
+            // Auto-save game state changes for BOTH players
             useEffect(() => {
-                if (gameState && sessionId && isPlayer1) {
+                if (gameState && sessionId) {
                     saveSession(sessionId, isPlayer1, gameState);
                 }
             }, [gameState]);
@@ -301,9 +331,10 @@
             const handleMessage = (data) => {
                 if (data.type === 'gameState') {
                     setGameState(data.state);
-                    // Save updated state
-                    if (sessionId) {
-                        saveSession(sessionId, isPlayer1, data.state);
+                    // Save updated state for BOTH players
+                    const peerId = isPlayer1 ? peerRef.current?.id : sessionId;
+                    if (peerId) {
+                        saveSession(peerId, isPlayer1, data.state);
                     }
                     addLog('Game state updated');
                 } else if (data.type === 'action') {
