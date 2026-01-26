@@ -65,8 +65,8 @@ To complete a set, you need **3 cards**:
 - Use its effect
 
 **Option C - Can't/Won't Play:**
-- If you have 3+ cards selected: **Discard** 1 card from your hand
-- If you have no cards selected or want to draw: **Draw** 1 card from Main Deck
+- If you have 5 or MORE cards: **Discard** 1 card from your hand
+- If you have LESS than 5 cards: **Draw** 1 card from Main Deck
 
 Turn ends, passes to Player 2
 
@@ -83,8 +83,8 @@ Turn ends, passes to Player 2
 - Use its effect
 
 **Option C - Can't/Won't Play:**
-- If you have 1 card selected: **Discard** that card from your hand
-- If you have no cards selected or want to draw: **Draw** 1 card from Main Deck
+- If you have 5 or MORE cards: **Discard** 1 card from your hand
+- If you have LESS than 5 cards: **Draw** 1 card from Main Deck
 
 Turn ends, passes to Player 1
 
@@ -158,7 +158,9 @@ When Player 2 has collected **5 pleasure cards**
 
 ## Important Rules
 
-- **Hand limit:** Always keep exactly 5 cards in hand (after drawing and discarding)
+- **Hand limit:** Maximum 5 cards in hand. You can have less, but not more.
+  - Draw button only appears when you have LESS than 5 cards
+  - Discard button only appears when you have 5 or MORE cards
 - **Queue is public:** Both players can see all punishments waiting
 - **Equipment attaches to punishments:** Not standalone
 - **Player 2's pleasure cards:** Don't go in queue - Player 2 keeps them
@@ -198,7 +200,7 @@ When Player 2 has collected **5 pleasure cards**
 | Complete set | +1 point, add to queue | Draw 1 pleasure card, add set to queue |
 | Spend point | Draw from Equipment Deck | N/A |
 | Win condition | 5 punishments in queue | 5 pleasure cards collected |
-| Hand size | Always 5 cards | Always 5 cards |
+| Hand size | Maximum 5 cards (can have less) | Maximum 5 cards (can have less) |
 
 ---
 

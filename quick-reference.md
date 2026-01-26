@@ -10,8 +10,8 @@
 │  [Position, Intensity,     [Player 1 only]   [Player 2 only]│
 │   Time, Special cards]                                      │
 │                                                             │
-│  Player 1 Hand: [5 cards]                                   │
-│  Player 2 Hand: [5 cards]                                   │
+│  Player 1 Hand: [up to 5 cards]                             │
+│  Player 2 Hand: [up to 5 cards]                             │
 │                                                             │
 │  Queue (Public): [ Empty at start ]                         │
 │                                                             │
@@ -26,28 +26,34 @@
 ┌──────────────────────────┐
 │   PLAYER 1 TURN          │
 ├──────────────────────────┤
-│ 1. Draw from Main Deck   │
-│ 2. Have set?             │
+│ 1. Have set?             │
 │    YES: Play set         │
 │         → Queue +1       │
 │         → Earn 1 point   │
 │         → Spend point?   │
 │            YES: Draw     │
 │                Equipment │
-│    NO: Discard 1 card    │
-│ 3. End turn (5 cards)    │
+│    NO: Can't play?       │
+│        - If <5 cards:    │
+│          Draw 1 card     │
+│        - If ≥5 cards:    │
+│          Discard 1 card  │
+│ 2. End turn              │
 └──────────────────────────┘
            ↓
 ┌──────────────────────────┐
 │   PLAYER 2 TURN          │
 ├──────────────────────────┤
-│ 1. Draw from Main Deck   │
-│ 2. Have set?             │
+│ 1. Have set?             │
 │    YES: Play set         │
 │         → Queue +1       │
 │         → Draw Pleasure  │
-│    NO: Discard 1 card    │
-│ 3. End turn (5 cards)    │
+│    NO: Can't play?       │
+│        - If <5 cards:    │
+│          Draw 1 card     │
+│        - If ≥5 cards:    │
+│          Discard 1 card  │
+│ 2. End turn              │
 └──────────────────────────┘
            ↓
       Check Win?
