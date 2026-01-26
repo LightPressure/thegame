@@ -1292,6 +1292,19 @@
                             newState.player2.pleasureCards.push(pleasureCard);
                             newState.player2.points -= 1;
                             addLog(`Drew random pleasure: ${pleasureCard.name}`);
+
+                            // Check win condition
+                            if (newState.player2.pleasureCards.length >= 5) {
+                                setWinner('me');
+                                setTimeout(() => {
+                                    if (connRef.current && connRef.current.open) {
+                                        connRef.current.send({
+                                            type: 'winner',
+                                            winner: 'opponent'
+                                        });
+                                    }
+                                }, 100);
+                            }
                         } else {
                             addLog('No pleasure cards left!');
                         }
@@ -1322,6 +1335,19 @@
                     newState.player2.pleasureCards.push(pleasureCard);
                     newState.player2.points -= 3;
                     addLog(`Chose pleasure: ${pleasureCard.name}`);
+
+                    // Check win condition
+                    if (newState.player2.pleasureCards.length >= 5) {
+                        setWinner('me');
+                        setTimeout(() => {
+                            if (connRef.current && connRef.current.open) {
+                                connRef.current.send({
+                                    type: 'winner',
+                                    winner: 'opponent'
+                                });
+                            }
+                        }, 100);
+                    }
 
                     setTimeout(() => {
                         sendGameState(newState);
