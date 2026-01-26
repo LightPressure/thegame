@@ -340,6 +340,9 @@
             const [askingCardType, setAskingCardType] = useState(null);
             const [logsCollapsed, setLogsCollapsed] = useState(true);
             const [toast, setToast] = useState(null);
+            const [showPleasureDialog, setShowPleasureDialog] = useState(false);
+            const [pleasureDialogType, setPleasureDialogType] = useState(null); // 'random' or 'choose'
+            const [showEquipmentDialog, setShowEquipmentDialog] = useState(false);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
@@ -491,6 +494,7 @@
                     },
                     player2: {
                         hand: mainDeck.splice(0, 5),
+                        points: 0,
                         pleasureCards: [],
                     },
                     queue: [],
@@ -876,10 +880,20 @@
                     const newState = { ...prev };
                     const playerKey = isPlayer1 ? 'player1' : 'player2';
 
+                    // If main deck is empty, reshuffle discard pile
+                    if (newState.mainDeck.length === 0 && newState.discardPile.length > 0) {
+                        console.log('[DRAW] Main deck empty, reshuffling discard pile');
+                        newState.mainDeck = shuffleDeck([...newState.discardPile]);
+                        newState.discardPile = [];
+                        addLog('♻️ Reshuffled discard pile into deck');
+                    }
+
                     if (newState.mainDeck.length > 0) {
                         const drawnCard = newState.mainDeck.shift();
                         newState[playerKey].hand.push(drawnCard);
                         addLog(`Drew: ${drawnCard.name}`);
+                    } else {
+                        addLog('⚠️ No cards left to draw');
                     }
 
                     // Switch turn after drawing
@@ -930,12 +944,14 @@
                         newState.queue.push(set);
                         newState.player1.points += 1;
                     } else {
-                        // Player 2: Draw pleasure card (NOT added to queue)
-                        if (newState.pleasureDeck.length > 0) {
-                            const pleasureCard = newState.pleasureDeck.shift();
-                            newState.player2.pleasureCards.push(pleasureCard);
-                            addLog(`Drew pleasure: ${pleasureCard.name}`);
-                        }
+                        // Player 2: Add cards randomly back to main deck and get points
+                        const cardsToReturn = [position, intensity, time];
+                        cardsToReturn.forEach(card => {
+                            const randomIndex = Math.floor(Math.random() * (newState.mainDeck.length + 1));
+                            newState.mainDeck.splice(randomIndex, 0, card);
+                        });
+                        newState.player2.points += 1;
+                        addLog(`+1 point (now ${newState.player2.points})`);
                     }
 
                     // Check win conditions
@@ -1025,19 +1041,60 @@
                 sendAction(action);
             };
 
-            const handleDrawEquipment = () => {
-                if (!isPlayer1 || !isMyTurn() || !gameState || gameState.player1.points < 1) return;
+            const handleDrawEquipment = (type) => {
+                if (!isPlayer1 || !gameState) return;
+
+                const cost = type === 'random' ? 1 : 3;
+
+                if (gameState.player1.points < cost) {
+                    addLog(`Need ${cost} points for equipment`);
+                    return;
+                }
+
+                if (type === 'random') {
+                    // Random equipment for 1 point
+                    setGameState(prev => {
+                        const newState = { ...prev };
+
+                        if (newState.equipmentDeck.length > 0 && newState.queue.length > 0) {
+                            const equipment = newState.equipmentDeck.shift();
+                            newState.queue[newState.queue.length - 1].equipment.push(equipment);
+                            newState.player1.points -= 1;
+                            addLog(`Added equipment: ${equipment.name}`);
+
+                            // Send updated state
+                            setTimeout(() => {
+                                sendGameState(newState);
+                            }, 50);
+                        }
+
+                        return newState;
+                    });
+
+                    const action = {
+                        type: 'drawEquipment'
+                    };
+                    sendAction(action);
+                } else {
+                    // Open dialog to choose equipment for 3 points
+                    setShowEquipmentDialog(true);
+                }
+            };
+
+            // Execute chosen equipment purchase
+            const executeChooseEquipment = (equipment) => {
+                setShowEquipmentDialog(false);
 
                 setGameState(prev => {
                     const newState = { ...prev };
 
-                    if (newState.equipmentDeck.length > 0 && newState.queue.length > 0) {
-                        const equipment = newState.equipmentDeck.shift();
+                    if (newState.queue.length > 0) {
+                        // Remove the chosen card from equipment deck
+                        newState.equipmentDeck = newState.equipmentDeck.filter(e => e.id !== equipment.id);
                         newState.queue[newState.queue.length - 1].equipment.push(equipment);
-                        newState.player1.points -= 1;
-                        addLog(`Added equipment: ${equipment.name}`);
+                        newState.player1.points -= 3;
+                        addLog(`Chose equipment: ${equipment.name}`);
 
-                        // Send updated state
                         setTimeout(() => {
                             sendGameState(newState);
                         }, 50);
@@ -1045,11 +1102,6 @@
 
                     return newState;
                 });
-
-                const action = {
-                    type: 'drawEquipment'
-                };
-                sendAction(action);
             };
 
             // Handle playing a special card (Steal Card)
@@ -1204,6 +1256,67 @@
                 }
             };
 
+            // Handle buying pleasure card with points
+            const handleBuyPleasure = (type) => {
+                if (!gameState || isPlayer1) return; // Only Player 2 can buy pleasure cards
+
+                const myStats = gameState.player2;
+                const cost = type === 'random' ? 1 : 3;
+
+                if (myStats.points < cost) {
+                    addLog(`Need ${cost} points to buy pleasure card`);
+                    return;
+                }
+
+                if (type === 'random') {
+                    // Buy random pleasure card for 1 point
+                    setGameState(prev => {
+                        const newState = { ...prev };
+
+                        if (newState.pleasureDeck.length > 0) {
+                            const pleasureCard = newState.pleasureDeck.shift();
+                            newState.player2.pleasureCards.push(pleasureCard);
+                            newState.player2.points -= 1;
+                            addLog(`Drew random pleasure: ${pleasureCard.name}`);
+                        } else {
+                            addLog('No pleasure cards left!');
+                        }
+
+                        setTimeout(() => {
+                            sendGameState(newState);
+                        }, 50);
+
+                        return newState;
+                    });
+                } else {
+                    // Open dialog to choose specific pleasure card for 3 points
+                    setPleasureDialogType('choose');
+                    setShowPleasureDialog(true);
+                }
+            };
+
+            // Execute chosen pleasure card purchase
+            const executeChoosePleasure = (pleasureCard) => {
+                setShowPleasureDialog(false);
+                setPleasureDialogType(null);
+
+                setGameState(prev => {
+                    const newState = { ...prev };
+
+                    // Remove the chosen card from pleasure deck
+                    newState.pleasureDeck = newState.pleasureDeck.filter(c => c.id !== pleasureCard.id);
+                    newState.player2.pleasureCards.push(pleasureCard);
+                    newState.player2.points -= 3;
+                    addLog(`Chose pleasure: ${pleasureCard.name}`);
+
+                    setTimeout(() => {
+                        sendGameState(newState);
+                    }, 50);
+
+                    return newState;
+                });
+            };
+
             const myHand = gameState && (isPlayer1 ? gameState.player1.hand : gameState.player2.hand);
             const myStats = gameState && (isPlayer1 ? gameState.player1 : gameState.player2);
 
@@ -1272,16 +1385,16 @@
                             React.createElement('div', { className: 'fs-5 fw-bold' },
                                 isPlayer1
                                     ? React.createElement('span', null,
-                                        React.createElement('span', { className: 'text-primary' }, gameState?.player1?.points || 0),
+                                        React.createElement('span', { className: 'text-primary fs-3' }, gameState?.player1?.points || 0),
                                         ':',
-                                        gameState?.player2?.pleasureCards?.length || 0,
+                                        gameState?.player2?.points || 0,
                                         ' ',
                                         React.createElement('span', { className: 'text-muted small' }, `(${isPlayer1 ? gameState.player2.hand.length : gameState.player1.hand.length})`)
                                     )
                                     : React.createElement('span', null,
                                         gameState?.player1?.points || 0,
                                         ':',
-                                        React.createElement('span', { className: 'text-primary' }, gameState?.player2?.pleasureCards?.length || 0),
+                                        React.createElement('span', { className: 'text-primary fs-3' }, gameState?.player2?.points || 0),
                                         ' ',
                                         React.createElement('span', { className: 'text-muted small' }, `(${isPlayer1 ? gameState.player2.hand.length : gameState.player1.hand.length})`)
                                     )
@@ -1345,10 +1458,22 @@
                             className: 'btn btn-info btn-lg',
                             onClick: handleAskForCard
                         }, '❓ Ask For Card'),
-                        isPlayer1 && isMyTurn() && myStats.points >= 1 && gameState?.queue?.length > 0 && React.createElement('button', {
+                        isPlayer1 && myStats?.points >= 1 && gameState?.queue?.length > 0 && React.createElement('button', {
                             className: 'btn btn-warning btn-lg',
-                            onClick: handleDrawEquipment
-                        }, '🔧 Add Equipment (1pt)')
+                            onClick: () => handleDrawEquipment('random')
+                        }, '🔧 Random Equipment (1pt)'),
+                        isPlayer1 && myStats?.points >= 3 && gameState?.queue?.length > 0 && React.createElement('button', {
+                            className: 'btn btn-warning btn-lg',
+                            onClick: () => handleDrawEquipment('choose')
+                        }, '🔧 Choose Equipment (3pts)'),
+                        !isPlayer1 && myStats?.points >= 1 && React.createElement('button', {
+                            className: 'btn btn-primary btn-lg',
+                            onClick: () => handleBuyPleasure('random')
+                        }, '💝 Random Pleasure (1pt)'),
+                        !isPlayer1 && myStats?.points >= 3 && React.createElement('button', {
+                            className: 'btn btn-success btn-lg',
+                            onClick: () => handleBuyPleasure('choose')
+                        }, '💝 Choose Pleasure (3pts)')
                     ),
 
                     showAskDialog && React.createElement('div', {
@@ -1396,6 +1521,104 @@
                                         onClick: () => setShowAskDialog(false)
                                     }, 'Cancel')
                                 )
+                            )
+                        )
+                    )
+                ),
+
+                showPleasureDialog && React.createElement('div', {
+                    className: 'modal show d-block',
+                    style: { backgroundColor: 'rgba(0,0,0,0.5)' },
+                    onClick: () => setShowPleasureDialog(false)
+                },
+                    React.createElement('div', {
+                        className: 'modal-dialog modal-dialog-centered modal-lg',
+                        onClick: (e) => e.stopPropagation()
+                    },
+                        React.createElement('div', { className: 'modal-content' },
+                            React.createElement('div', { className: 'modal-header' },
+                                React.createElement('h5', { className: 'modal-title' }, '💝 Choose Pleasure Card'),
+                                React.createElement('button', {
+                                    type: 'button',
+                                    className: 'btn-close',
+                                    onClick: () => setShowPleasureDialog(false)
+                                })
+                            ),
+                            React.createElement('div', { className: 'modal-body' },
+                                React.createElement('p', null, 'Choose a pleasure card (costs 3 points):'),
+                                React.createElement('div', { className: 'd-flex gap-3 flex-wrap justify-content-center' },
+                                    gameState?.pleasureDeck?.map((card, idx) =>
+                                        React.createElement('div', {
+                                            className: 'game-card card-pleasure',
+                                            key: idx,
+                                            style: { cursor: 'pointer' },
+                                            onClick: () => executeChoosePleasure(card)
+                                        },
+                                            React.createElement('div', { className: 'card-body' },
+                                                card.emoji && React.createElement('div', { className: 'card-emoji' }, card.emoji),
+                                                React.createElement('div', { className: 'card-type' }, 'pleasure'),
+                                                React.createElement('div', { className: 'card-name' }, card.name),
+                                                card.description && React.createElement('div', { className: 'card-description' }, card.description),
+                                                card.duration && React.createElement('div', { className: 'card-description' }, card.duration)
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: 'modal-footer' },
+                                React.createElement('button', {
+                                    className: 'btn btn-secondary',
+                                    onClick: () => setShowPleasureDialog(false)
+                                }, 'Cancel')
+                            )
+                        )
+                    )
+                ),
+
+                showEquipmentDialog && React.createElement('div', {
+                    className: 'modal show d-block',
+                    style: { backgroundColor: 'rgba(0,0,0,0.5)' },
+                    onClick: () => setShowEquipmentDialog(false)
+                },
+                    React.createElement('div', {
+                        className: 'modal-dialog modal-dialog-centered modal-lg',
+                        onClick: (e) => e.stopPropagation()
+                    },
+                        React.createElement('div', { className: 'modal-content' },
+                            React.createElement('div', { className: 'modal-header' },
+                                React.createElement('h5', { className: 'modal-title' }, '🔧 Choose Equipment'),
+                                React.createElement('button', {
+                                    type: 'button',
+                                    className: 'btn-close',
+                                    onClick: () => setShowEquipmentDialog(false)
+                                })
+                            ),
+                            React.createElement('div', { className: 'modal-body' },
+                                React.createElement('p', null, 'Choose an equipment card (costs 3 points):'),
+                                React.createElement('div', { className: 'd-flex gap-3 flex-wrap justify-content-center' },
+                                    gameState?.equipmentDeck?.map((card, idx) =>
+                                        React.createElement('div', {
+                                            className: 'game-card card-equipment',
+                                            key: idx,
+                                            style: { cursor: 'pointer' },
+                                            onClick: () => executeChooseEquipment(card)
+                                        },
+                                            React.createElement('div', { className: 'card-body' },
+                                                card.emoji && React.createElement('div', { className: 'card-emoji' }, card.emoji),
+                                                React.createElement('div', { className: 'card-type' }, 'equipment'),
+                                                React.createElement('div', { className: 'card-name' }, card.name),
+                                                card.description && React.createElement('div', { className: 'card-description' }, card.description),
+                                                card.duration && React.createElement('div', { className: 'card-description' }, card.duration)
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: 'modal-footer' },
+                                React.createElement('button', {
+                                    className: 'btn btn-secondary',
+                                    onClick: () => setShowEquipmentDialog(false)
+                                }, 'Cancel')
                             )
                         )
                     )

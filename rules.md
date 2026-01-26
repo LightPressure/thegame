@@ -20,9 +20,10 @@ Player 1 spends points to draw from this deck:
 - Cost: 1 point per card
 
 ### Pleasure Deck (Player 2 only)
-Player 2 earns cards from this deck when completing sets:
+Player 2 can spend points to draw from this deck:
 - Oral, Penetration, Cuddle, Massage, Neck/Breast Play, etc.
 - Also includes: Skip Punishment, Remove Equipment, Stop Game
+- Cost: 1 point = random card, 3 points = choose any card
 
 ---
 
@@ -58,7 +59,9 @@ To complete a set, you need **3 cards**:
 - Play 3 cards (Position + Intensity + Time)
 - Add it to the **Queue** (punishment queue - public area)
 - Earn **1 point**
-- **Optional:** Spend 1 point to draw from Equipment Deck and attach to this punishment in queue
+- **Optional:** Spend points to add equipment to most recent punishment:
+  - 1 point = random equipment
+  - 3 points = choose specific equipment
 
 **Option B - Play Special Card:**
 - Play a Special Card (Steal Card or Ask For Card)
@@ -75,8 +78,11 @@ Turn ends, passes to Player 2
 
 **Option A - Play a Set:**
 - Play 3 cards (Position + Intensity + Time)
-- **Does NOT go to queue** - Player 2 sets are discarded after playing
-- Draw **1 card** from Pleasure Deck (keep it - this is your reward!)
+- **Cards go randomly back into main deck** (not to queue)
+- Earn **1 point**
+- **Optional:** Spend points to draw from Pleasure Deck:
+  - 1 point = random pleasure card
+  - 3 points = choose specific pleasure card
 
 **Option B - Play Special Card:**
 - Play a Special Card (Steal Card or Ask For Card)
@@ -108,7 +114,7 @@ Turn ends, passes to Player 1
 ## The Queue (Public Area)
 
 - **Only Player 1's completed sets go here**
-- Player 2's sets are discarded (Player 2 gets pleasure cards instead)
+- Player 2's sets go randomly back into the main deck for reuse
 - Both players can see what punishments are queued
 - Equipment cards are attached to specific punishments in the queue
 
