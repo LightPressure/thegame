@@ -12,7 +12,7 @@ window.GAME_CARDS = window.GAME_CARDS || {
     // POSITION CARDS (where the spanking happens)
     position: [
       { id: 'pos_1', type: 'position', name: 'Over Knee', emoji: '🏓' },
-      { id: 'pos_2', type: 'position', name: 'Bent Over Table', emoji: '🛋️' },
+      { id: 'pos_2', type: 'position', name: 'Lying on the table', emoji: '📦️' },
       { id: 'pos_3', type: 'position', name: 'Against Wall', emoji: '🧱' },
       { id: 'pos_4', type: 'position', name: 'Over Pillow', emoji: '🛏️' },
       { id: 'pos_5', type: 'position', name: 'Standing - Hands on Wall', emoji: '🧱' },
