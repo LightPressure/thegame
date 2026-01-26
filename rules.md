@@ -56,9 +56,9 @@ To complete a set, you need **3 cards**:
 
 **Option A - Play a Set:**
 - Play 3 cards (Position + Intensity + Time)
-- Add it to the **Queue** (public area)
+- Add it to the **Queue** (punishment queue - public area)
 - Earn **1 point**
-- **Optional:** Spend 1 point to draw from Equipment Deck and attach to this punishment
+- **Optional:** Spend 1 point to draw from Equipment Deck and attach to this punishment in queue
 
 **Option B - Play Special Card:**
 - Play a Special Card (Steal Card or Ask For Card)
@@ -75,7 +75,7 @@ Turn ends, passes to Player 2
 
 **Option A - Play a Set:**
 - Play 3 cards (Position + Intensity + Time)
-- Add it to the **Queue** (public area)
+- **Does NOT go to queue** - Player 2 sets are discarded after playing
 - Draw **1 card** from Pleasure Deck (keep it - this is your reward!)
 
 **Option B - Play Special Card:**
@@ -107,7 +107,8 @@ Turn ends, passes to Player 1
 
 ## The Queue (Public Area)
 
-- All completed sets go here
+- **Only Player 1's completed sets go here**
+- Player 2's sets are discarded (Player 2 gets pleasure cards instead)
 - Both players can see what punishments are queued
 - Equipment cards are attached to specific punishments in the queue
 
@@ -117,6 +118,8 @@ Turn ends, passes to Player 1
 2. Bent Over Table + Hard + 10min [+ Nipple Clamps + Vibrator]
 3. Against Wall + Light + 2min
 ```
+
+**Note:** All sets in the queue are from Player 1 only.
 
 ---
 
@@ -128,7 +131,7 @@ Turn ends, passes to Player 1
 - Can attach multiple equipment to same punishment (if you have points)
 
 ### Player 2 Actions:
-- Complete set → Add to queue + Draw 1 pleasure card
+- Complete set → Draw 1 pleasure card (set is discarded, NOT added to queue)
 - Use pleasure card effects:
   - **"Skip Punishment"** - Remove one punishment from queue
   - **"Remove Equipment"** - Remove one equipment card from any punishment
@@ -197,7 +200,7 @@ When Player 2 has collected **5 pleasure cards**
 
 | Action | Player 1 | Player 2 |
 |--------|----------|----------|
-| Complete set | +1 point, add to queue | Draw 1 pleasure card, add set to queue |
+| Complete set | +1 point, add to queue | Draw 1 pleasure card (set discarded) |
 | Spend point | Draw from Equipment Deck | N/A |
 | Win condition | 5 punishments in queue | 5 pleasure cards collected |
 | Hand size | Maximum 5 cards (can have less) | Maximum 5 cards (can have less) |
@@ -227,8 +230,9 @@ When Player 2 has collected **5 pleasure cards**
 **Turn 4 - Player 2:**
 - Draws "Time - 5min" card
 - Now has full set!
-- Plays: "Bent Over Table + Light + 5min" → Queue (3 punishments)
+- Plays: "Bent Over Table + Light + 5min" → Set is discarded (does NOT go to queue)
 - Draws from Pleasure Deck → Gets "Oral - Receive" (1st pleasure card)
+- Queue still has 2 punishments (only Player 1's sets count)
 
 *Continue until someone wins...*
 
