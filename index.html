@@ -1104,81 +1104,27 @@
                 React.createElement('h1', { className: 'text-center mb-4' }, '🎴 The GAME'),
 
                 React.createElement('div', {
-                    className: 'alert alert-danger text-center mb-3',
+                    className: 'alert alert-danger text-center mb-3 py-2',
                     style: { borderColor: 'var(--secondary-pink)', color: 'white' }
                 },
-                    React.createElement('strong', null, '🔞 18+ Adult Content Only'),
-                    React.createElement('div', { className: 'small mt-1' },
-                        'This is an intimate couples game intended for adults. By continuing, you confirm you are 18 years or older.'
-                    )
-                ),
-
-                React.createElement('div', {
-                    className: `alert text-center fw-bold ${status === 'waiting' ? 'alert-warning' : status === 'connecting' ? 'alert-info' : status === 'connected' ? 'alert-success' : 'alert-secondary'}`
-                },
-                    status === 'waiting' ? '⏳ Waiting for Player 2...' :
-                    status === 'connecting' ? '🔄 Connecting...' :
-                    status === 'connected' ? '✅ Connected!' : '🔧 Initializing...'
-                ),
-
-                React.createElement('div', { className: 'card mb-3' },
-                    React.createElement('div', {
-                        className: 'card-header bg-light d-flex justify-content-between align-items-center',
-                        style: { cursor: 'pointer' },
-                        onClick: () => setLogsCollapsed(!logsCollapsed)
-                    },
-                        React.createElement('strong', null, '📋 Activity Log'),
-                        React.createElement('span', { className: 'badge bg-secondary' }, logsCollapsed ? '▼ Show' : '▲ Hide')
-                    ),
-                    !logsCollapsed && React.createElement('div', { className: 'card-body p-0' },
-                        React.createElement('div', { className: 'log-container p-3' },
-                            logs.length === 0 ?
-                                React.createElement('div', { className: 'text-muted fst-italic small' }, 'No activity yet') :
-                                logs.map((log, i) =>
-                                    React.createElement('div', { className: 'border-start border-primary border-3 bg-light rounded p-2 mb-1 small', key: i },
-                                        React.createElement('span', { className: 'text-muted me-2 small' }, log.time),
-                                        React.createElement('span', null, log.message)
-                                    )
-                                )
-                        )
+                    React.createElement('strong', null, '🔞 18+ Adult Content • '),
+                    React.createElement('span', { className: 'small' },
+                        'Intimate P2P card game for couples exploring consensual discipline & pleasure'
                     )
                 ),
 
                 !connected && isPlayer1 && gameLink && React.createElement('div', null,
-                    React.createElement('div', { className: 'alert alert-info mb-3', style: { color: 'white' } },
-                        React.createElement('strong', null, '💕 About The Game:'),
-                        React.createElement('p', { className: 'small mb-2 mt-2' },
-                            'An intimate P2P card game for couples exploring consensual discipline and pleasure. Player 1 builds a punishment queue, Player 2 earns pleasure rewards. Both players work together to create a sensual experience.'
-                        )
-                    ),
-                    React.createElement('div', { className: 'alert alert-info', style: { color: 'white' } },
-                        React.createElement('strong', null, '📋 How to Connect:'),
-                        React.createElement('ol', { className: 'mb-0 mt-2' },
-                            React.createElement('li', null, 'Scan the QR code with your phone, OR'),
-                            React.createElement('li', null, 'Copy/share the link below'),
-                            React.createElement('li', null, 'Send it to your partner'),
-                            React.createElement('li', null, 'Wait for them to open it'),
-                            React.createElement('li', null, 'Connection will establish automatically!')
-                        )
-                    ),
                     React.createElement('div', { className: 'border rounded p-4 mb-3 bg-light text-center' },
                         React.createElement('div', {
                             className: 'bg-white p-3 rounded d-inline-block mb-3',
                             ref: qrRef
                         }),
-                        React.createElement('div', { className: 'text-muted small' }, '📱 Scan to join on mobile')
+                        React.createElement('div', { className: 'text-muted small' }, '📱 Share this QR code or link with your partner')
                     ),
-                    React.createElement('div', { className: 'border border-secondary border-2 border-dashed rounded p-3 mb-3 bg-light font-monospace small text-break' }, gameLink),
-                    React.createElement('div', { className: 'd-flex gap-2 mb-3' },
-                        React.createElement('button', {
-                            className: 'btn btn-primary flex-fill',
-                            onClick: copyLink
-                        }, '📋 Copy Link'),
-                        React.createElement('button', {
-                            className: 'btn btn-success flex-fill',
-                            onClick: shareLink
-                        }, '📤 Share Link')
-                    )
+                    React.createElement('button', {
+                        className: 'btn btn-primary w-100 mb-3',
+                        onClick: copyLink
+                    }, `📋 Copy Link: ${gameLink.substring(0, 15)}...`)
                 ),
 
                 !connected && !isPlayer1 && React.createElement('div', { className: 'alert alert-info' },
@@ -1407,6 +1353,34 @@
                                     }, 'Cancel')
                                 )
                             )
+                        )
+                    )
+                ),
+
+                React.createElement('div', { className: 'card mb-3' },
+                    React.createElement('div', {
+                        className: 'card-header bg-light d-flex justify-content-between align-items-center',
+                        style: { cursor: 'pointer' },
+                        onClick: () => setLogsCollapsed(!logsCollapsed)
+                    },
+                        React.createElement('strong', null,
+                            status === 'waiting' ? '📋 Activity Log - ⏳ Waiting for Player 2...' :
+                            status === 'connecting' ? '📋 Activity Log - 🔄 Connecting...' :
+                            status === 'connected' ? '📋 Activity Log - ✅ Connected!' :
+                            '📋 Activity Log - 🔧 Initializing...'
+                        ),
+                        React.createElement('span', { className: 'badge bg-secondary' }, logsCollapsed ? '▼ Show' : '▲ Hide')
+                    ),
+                    !logsCollapsed && React.createElement('div', { className: 'card-body p-0' },
+                        React.createElement('div', { className: 'log-container p-3' },
+                            logs.length === 0 ?
+                                React.createElement('div', { className: 'text-muted fst-italic small' }, 'No activity yet') :
+                                logs.map((log, i) =>
+                                    React.createElement('div', { className: 'border-start border-primary border-3 bg-light rounded p-2 mb-1 small', key: i },
+                                        React.createElement('span', { className: 'text-muted me-2 small' }, log.time),
+                                        React.createElement('span', null, log.message)
+                                    )
+                                )
                         )
                     )
                 )
