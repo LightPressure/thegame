@@ -1182,11 +1182,6 @@
                         React.createElement('div', null,
                             React.createElement('div', { className: 'fs-5 fw-bold text-primary' },
                                 isPlayer1 ? '👤 Player 1' : '👤 Player 2'
-                            ),
-                            React.createElement('div', {
-                                className: `fw-semibold ${isMyTurn() ? 'text-success' : 'text-muted'}`
-                            },
-                                isMyTurn() ? '✓ Your Turn' : '⏳ Opponent\'s Turn'
                             )
                         ),
                         React.createElement('div', { className: 'd-flex gap-3 align-items-center flex-wrap' },
@@ -1226,7 +1221,9 @@
 
                     React.createElement('div', { className: 'card' },
                         React.createElement('div', { className: 'card-header bg-light' },
-                            React.createElement('h5', { className: 'mb-0' }, '🎴 Your Hand')
+                            React.createElement('h5', { className: 'mb-0' },
+                                isMyTurn() ? '🎴 Your Turn' : '⏳ Opponent\'s Turn'
+                            )
                         ),
                         React.createElement('div', { className: 'card-body' },
                             React.createElement('div', { className: 'd-flex gap-3 flex-wrap' },
@@ -1371,7 +1368,9 @@
                                 item.equipment && item.equipment.length > 0 &&
                                 React.createElement('div', { className: 'd-flex gap-2 flex-wrap pt-2 border-top' },
                                     item.equipment.map((eq, eqIdx) =>
-                                        React.createElement('span', { className: 'badge bg-danger-subtle text-danger-emphasis', key: eqIdx }, eq.name)
+                                        React.createElement('span', { className: 'badge bg-danger-subtle text-danger-emphasis', key: eqIdx },
+                                            eq.emoji ? `${eq.emoji} ${eq.name}` : eq.name
+                                        )
                                     )
                                 )
                             )
