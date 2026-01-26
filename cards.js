@@ -15,7 +15,7 @@ window.GAME_CARDS = window.GAME_CARDS || {
       { id: 'pos_2', type: 'position', name: 'Bent Over Table', emoji: '🛋️' },
       { id: 'pos_3', type: 'position', name: 'Against Wall', emoji: '🧱' },
       { id: 'pos_4', type: 'position', name: 'Over Pillow', emoji: '🛏️' },
-      { id: 'pos_5', type: 'position', name: 'Standing - Hands on Wall', emoji: '🚶🧱' },
+      { id: 'pos_5', type: 'position', name: 'Standing - Hands on Wall', emoji: '🧱' },
       { id: 'pos_6', type: 'position', name: 'Kneeling on Furniture', emoji: '🪑' },
       { id: 'pos_7', type: 'position', name: 'Lying Flat', emoji: '😴' },
       { id: 'pos_8', type: 'position', name: 'On All Fours', emoji: '🐕️' },

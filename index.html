@@ -256,6 +256,32 @@
         .modal-footer {
             border-color: var(--secondary-pink);
         }
+
+        /* Toast notification */
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--secondary-pink), var(--primary-purple));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(212, 80, 107, 0.4);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
     </style>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -287,6 +313,7 @@
             const [showAskDialog, setShowAskDialog] = useState(false);
             const [askingCardType, setAskingCardType] = useState(null);
             const [logsCollapsed, setLogsCollapsed] = useState(true);
+            const [toast, setToast] = useState(null);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
@@ -1057,10 +1084,16 @@
                 sendAction(action);
             };
 
+            const showToast = (message) => {
+                setToast(message);
+                setTimeout(() => setToast(null), 3000);
+            };
+
             const copyLink = async () => {
                 try {
                     if (navigator.clipboard && window.isSecureContext) {
                         await navigator.clipboard.writeText(gameLink);
+                        showToast('✅ Link copied to clipboard!');
                         addLog('Link copied to clipboard!');
                     } else {
                         const textarea = document.createElement('textarea');
@@ -1071,9 +1104,11 @@
                         textarea.select();
                         document.execCommand('copy');
                         document.body.removeChild(textarea);
+                        showToast('✅ Link copied to clipboard!');
                         addLog('Link copied to clipboard!');
                     }
                 } catch (err) {
+                    showToast('❌ Failed to copy link');
                     addLog('Failed to copy link');
                 }
             };
@@ -1101,9 +1136,11 @@
             const myStats = gameState && (isPlayer1 ? gameState.player1 : gameState.player2);
 
             return React.createElement('div', { className: 'container my-4' },
+                toast && React.createElement('div', { className: 'toast-notification' }, toast),
+
                 React.createElement('h1', { className: 'text-center mb-4' }, '🎴 The GAME'),
 
-                React.createElement('div', {
+                !connected && React.createElement('div', {
                     className: 'alert alert-danger text-center mb-3 py-2',
                     style: { borderColor: 'var(--secondary-pink)', color: 'white' }
                 },
