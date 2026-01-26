@@ -343,6 +343,8 @@
             const [showPleasureDialog, setShowPleasureDialog] = useState(false);
             const [pleasureDialogType, setPleasureDialogType] = useState(null); // 'random' or 'choose'
             const [showEquipmentDialog, setShowEquipmentDialog] = useState(false);
+            const [drawnEquipment, setDrawnEquipment] = useState(null);
+            const [drawnPleasure, setDrawnPleasure] = useState(null);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
@@ -1076,6 +1078,9 @@
                             newState.player1.points -= 1;
                             addLog(`Added equipment: ${equipment.name}`);
 
+                            // Show modal with drawn equipment
+                            setDrawnEquipment(equipment);
+
                             // Send updated state
                             setTimeout(() => {
                                 sendGameState(newState);
@@ -1293,6 +1298,9 @@
                             newState.player2.points -= 1;
                             addLog(`Drew random pleasure: ${pleasureCard.name}`);
 
+                            // Show modal with drawn pleasure
+                            setDrawnPleasure(pleasureCard);
+
                             // Check win condition
                             if (newState.player2.pleasureCards.length >= 5) {
                                 setWinner('me');
@@ -1372,7 +1380,7 @@
                             )
                             : '🎴 The GAME'
                     ),
-                    connected && gameState && isPlayer1 && React.createElement('button', {
+                    React.createElement('button', {
                         className: 'btn btn-outline-danger btn-sm',
                         onClick: clearSession
                     }, '🔄 New Game')
@@ -1675,6 +1683,90 @@
                                     className: 'btn btn-secondary',
                                     onClick: () => setShowEquipmentDialog(false)
                                 }, 'Cancel')
+                            )
+                        )
+                    )
+                ),
+
+                drawnEquipment && React.createElement('div', {
+                    className: 'modal show d-block',
+                    style: { backgroundColor: 'rgba(0,0,0,0.5)' },
+                    onClick: () => setDrawnEquipment(null)
+                },
+                    React.createElement('div', {
+                        className: 'modal-dialog modal-dialog-centered',
+                        onClick: (e) => e.stopPropagation()
+                    },
+                        React.createElement('div', { className: 'modal-content' },
+                            React.createElement('div', { className: 'modal-header' },
+                                React.createElement('h5', { className: 'modal-title' }, '🔧 Equipment Drawn'),
+                                React.createElement('button', {
+                                    type: 'button',
+                                    className: 'btn-close',
+                                    onClick: () => setDrawnEquipment(null)
+                                })
+                            ),
+                            React.createElement('div', { className: 'modal-body text-center' },
+                                React.createElement('p', null, 'You drew:'),
+                                React.createElement('div', { className: 'd-flex justify-content-center' },
+                                    React.createElement('div', { className: 'game-card card-equipment' },
+                                        React.createElement('div', { className: 'card-body' },
+                                            drawnEquipment.emoji && React.createElement('div', { className: 'card-emoji' }, drawnEquipment.emoji),
+                                            React.createElement('div', { className: 'card-type' }, 'equipment'),
+                                            React.createElement('div', { className: 'card-name' }, drawnEquipment.name),
+                                            drawnEquipment.description && React.createElement('div', { className: 'card-description' }, drawnEquipment.description),
+                                            drawnEquipment.duration && React.createElement('div', { className: 'card-description' }, drawnEquipment.duration)
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: 'modal-footer' },
+                                React.createElement('button', {
+                                    className: 'btn btn-primary',
+                                    onClick: () => setDrawnEquipment(null)
+                                }, 'OK')
+                            )
+                        )
+                    )
+                ),
+
+                drawnPleasure && React.createElement('div', {
+                    className: 'modal show d-block',
+                    style: { backgroundColor: 'rgba(0,0,0,0.5)' },
+                    onClick: () => setDrawnPleasure(null)
+                },
+                    React.createElement('div', {
+                        className: 'modal-dialog modal-dialog-centered',
+                        onClick: (e) => e.stopPropagation()
+                    },
+                        React.createElement('div', { className: 'modal-content' },
+                            React.createElement('div', { className: 'modal-header' },
+                                React.createElement('h5', { className: 'modal-title' }, '💝 Pleasure Card Drawn'),
+                                React.createElement('button', {
+                                    type: 'button',
+                                    className: 'btn-close',
+                                    onClick: () => setDrawnPleasure(null)
+                                })
+                            ),
+                            React.createElement('div', { className: 'modal-body text-center' },
+                                React.createElement('p', null, 'You drew:'),
+                                React.createElement('div', { className: 'd-flex justify-content-center' },
+                                    React.createElement('div', { className: 'game-card card-pleasure' },
+                                        React.createElement('div', { className: 'card-body' },
+                                            drawnPleasure.emoji && React.createElement('div', { className: 'card-emoji' }, drawnPleasure.emoji),
+                                            React.createElement('div', { className: 'card-type' }, 'pleasure'),
+                                            React.createElement('div', { className: 'card-name' }, drawnPleasure.name),
+                                            drawnPleasure.description && React.createElement('div', { className: 'card-description' }, drawnPleasure.description),
+                                            drawnPleasure.duration && React.createElement('div', { className: 'card-description' }, drawnPleasure.duration)
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement('div', { className: 'modal-footer' },
+                                React.createElement('button', {
+                                    className: 'btn btn-primary',
+                                    onClick: () => setDrawnPleasure(null)
+                                }, 'OK')
                             )
                         )
                     )
