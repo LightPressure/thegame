@@ -129,8 +129,10 @@
                     // Player 1: Create peer and wait for connection
                     setIsPlayer1(true);
 
-                    // Restore session if exists
-                    if (savedSession && savedSession.isPlayer1) {
+                    // Try to reuse the same peer ID from saved session
+                    let savedPeerId = null;
+                    if (savedSession && savedSession.isPlayer1 && savedSession.peerId) {
+                        savedPeerId = savedSession.peerId;
                         addLog('Restoring previous session...');
                         if (savedSession.gameState) {
                             setGameState(savedSession.gameState);
@@ -139,7 +141,7 @@
                         addLog('Initializing as Player 1...');
                     }
 
-                    const peer = new Peer({
+                    const peer = new Peer(savedPeerId, {
                         config: {
                             iceServers: [
                                 { urls: 'stun:stun.l.google.com:19302' },
