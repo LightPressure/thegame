@@ -851,14 +851,13 @@
                         c => !selectedCards.find(sc => sc.id === c.id)
                     );
 
-                    // Add to queue
-                    newState.queue.push(set);
-
                     // Update player stats
                     if (isPlayer1) {
+                        // Player 1: Add to queue and get points
+                        newState.queue.push(set);
                         newState.player1.points += 1;
                     } else {
-                        // Player 2 draws pleasure card
+                        // Player 2: Draw pleasure card (NOT added to queue)
                         if (newState.pleasureDeck.length > 0) {
                             const pleasureCard = newState.pleasureDeck.shift();
                             newState.player2.pleasureCards.push(pleasureCard);
@@ -1193,9 +1192,19 @@
                         React.createElement('div', { className: 'd-flex gap-3 align-items-center flex-wrap' },
                         React.createElement('div', { className: 'd-flex gap-4' },
                             React.createElement('div', null,
-                                React.createElement('div', { className: 'text-muted small' }, 'Points'),
+                                React.createElement('div', { className: 'text-muted small' }, 'Points (P1:P2)'),
                                 React.createElement('div', { className: 'fs-4 fw-bold' },
-                                    `${gameState?.player1?.points || 0}:${gameState?.player2?.pleasureCards?.length || 0}`
+                                    isPlayer1
+                                        ? React.createElement('span', null,
+                                            React.createElement('span', { className: 'text-primary fs-3' }, gameState?.player1?.points || 0),
+                                            ':',
+                                            gameState?.player2?.pleasureCards?.length || 0
+                                        )
+                                        : React.createElement('span', null,
+                                            gameState?.player1?.points || 0,
+                                            ':',
+                                            React.createElement('span', { className: 'text-primary fs-3' }, gameState?.player2?.pleasureCards?.length || 0)
+                                        )
                                 )
                             ),
                             React.createElement('div', null,
