@@ -41,6 +41,7 @@
             const [showAskDialog, setShowAskDialog] = useState(false);
             const [askingCardType, setAskingCardType] = useState(null);
             const [logsCollapsed, setLogsCollapsed] = useState(true);
+            const [hasDrawnThisTurn, setHasDrawnThisTurn] = useState(false);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
@@ -228,6 +229,13 @@
                 }
             }, [gameState]);
 
+            // Reset draw flag when turn changes
+            useEffect(() => {
+                if (gameState && isMyTurn()) {
+                    setHasDrawnThisTurn(false);
+                }
+            }, [gameState?.currentTurn]);
+
             const setupConnection = (conn, asPlayer1) => {
                 conn.on('open', () => {
                     addLog('Connection opened!');
@@ -372,7 +380,7 @@
             };
 
             const handleDrawCard = () => {
-                if (!isMyTurn() || !gameState) return;
+                if (!isMyTurn() || !gameState || hasDrawnThisTurn) return;
 
                 setGameState(prev => {
                     const newState = { ...prev };
@@ -382,6 +390,7 @@
                         const drawnCard = newState.mainDeck.shift();
                         newState[playerKey].hand.push(drawnCard);
                         addLog(`Drew: ${drawnCard.name}`);
+                        setHasDrawnThisTurn(true);
                     }
 
                     // Send state after update
@@ -796,8 +805,12 @@
                                 React.createElement('div', { className: 'fs-4 fw-bold' }, myStats.pleasureCards.length)
                             ),
                             React.createElement('div', null,
-                                React.createElement('div', { className: 'text-muted small' }, 'Hand'),
+                                React.createElement('div', { className: 'text-muted small' }, 'Your Hand'),
                                 React.createElement('div', { className: 'fs-4 fw-bold' }, myHand.length)
+                            ),
+                            React.createElement('div', null,
+                                React.createElement('div', { className: 'text-muted small' }, 'Opponent Hand'),
+                                React.createElement('div', { className: 'fs-4 fw-bold' }, isPlayer1 ? gameState.player2.hand.length : gameState.player1.hand.length)
                             )
                         ),
                         isPlayer1 && React.createElement('button', {
@@ -889,8 +902,8 @@
                         React.createElement('button', {
                             className: 'btn btn-primary',
                             onClick: handleDrawCard,
-                            disabled: !isMyTurn() || myHand.length >= 6
-                        }, '📥 Draw Card'),
+                            disabled: !isMyTurn() || hasDrawnThisTurn
+                        }, hasDrawnThisTurn ? '✓ Card Drawn' : '📥 Draw Card'),
                         React.createElement('button', {
                             className: 'btn btn-success',
                             onClick: handlePlaySet,

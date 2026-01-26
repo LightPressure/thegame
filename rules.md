@@ -52,23 +52,25 @@ To complete a set, you need **3 cards**:
 ## Turn Structure
 
 ### Player 1's Turn:
-1. **Draw** 1 card from Main Deck
-2. **Check for Set** - Do you have Position + Intensity + Time?
-   - **YES** → Play the set:
+1. **Draw** 1 card from Main Deck (only once per turn!)
+2. **Play your action** - Choose ONE:
+   - **Play Set** (Position + Intensity + Time):
      - Add it to the **Queue** (public area)
      - Earn **1 point**
      - **Optional:** Spend 1 point to draw from Equipment Deck and attach to this punishment
-   - **NO** → Discard 1 card from your hand
-3. Your turn ends (keep 5 cards in hand)
+   - **Play Special Card** (Steal Card or Ask For Card)
+   - **Discard** 1 card from your hand (if you can't/don't want to play)
+3. Your turn ends, turn passes to Player 2
 
 ### Player 2's Turn:
-1. **Draw** 1 card from Main Deck
-2. **Check for Set** - Do you have Position + Intensity + Time?
-   - **YES** → Play the set:
+1. **Draw** 1 card from Main Deck (only once per turn!)
+2. **Play your action** - Choose ONE:
+   - **Play Set** (Position + Intensity + Time):
      - Add it to the **Queue** (public area)
      - Draw **1 card** from Pleasure Deck (keep it - this is your reward!)
-   - **NO** → Discard 1 card from your hand
-3. Your turn ends (keep 5 cards in hand)
+   - **Play Special Card** (Steal Card or Ask For Card)
+   - **Discard** 1 card from your hand (if you can't/don't want to play)
+3. Your turn ends, turn passes to Player 1
 
 ---
 
