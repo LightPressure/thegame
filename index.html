@@ -37,6 +37,7 @@
             const [gameState, setGameState] = useState(null);
             const [selectedCards, setSelectedCards] = useState([]);
             const [winner, setWinner] = useState(null);
+            const [sessionId, setSessionId] = useState(null);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
@@ -45,6 +46,39 @@
             const addLog = (message) => {
                 const time = new Date().toLocaleTimeString();
                 setLogs(prev => [...prev, { time, message }]);
+            };
+
+            // Save session to localStorage
+            const saveSession = (peerId, isP1, gState) => {
+                const session = {
+                    peerId,
+                    isPlayer1: isP1,
+                    gameState: gState,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('gameSession', JSON.stringify(session));
+                setSessionId(peerId);
+            };
+
+            // Load session from localStorage
+            const loadSession = () => {
+                const saved = localStorage.getItem('gameSession');
+                if (saved) {
+                    const session = JSON.parse(saved);
+                    // Session expires after 24 hours
+                    if (Date.now() - session.timestamp < 24 * 60 * 60 * 1000) {
+                        return session;
+                    }
+                    localStorage.removeItem('gameSession');
+                }
+                return null;
+            };
+
+            // Clear session
+            const clearSession = () => {
+                localStorage.removeItem('gameSession');
+                setSessionId(null);
+                window.location.href = window.location.pathname;
             };
 
             // Initialize game state
@@ -77,10 +111,22 @@
                 const urlParams = new URLSearchParams(window.location.search);
                 const peerId = urlParams.get('peer');
 
+                // Try to load saved session
+                const savedSession = loadSession();
+
                 if (!peerId) {
                     // Player 1: Create peer and wait for connection
                     setIsPlayer1(true);
-                    addLog('Initializing as Player 1...');
+
+                    // Restore session if exists
+                    if (savedSession && savedSession.isPlayer1) {
+                        addLog('Restoring previous session...');
+                        if (savedSession.gameState) {
+                            setGameState(savedSession.gameState);
+                        }
+                    } else {
+                        addLog('Initializing as Player 1...');
+                    }
 
                     const peer = new Peer({
                         config: {
@@ -98,6 +144,7 @@
                         const link = `${window.location.origin}${window.location.pathname}?peer=${id}`;
                         setGameLink(link);
                         setStatus('waiting');
+                        setSessionId(id);
                         addLog('Waiting for Player 2 to connect...');
                         addLog('Share the link below to invite them!');
 
@@ -171,6 +218,13 @@
                 };
             }, []);
 
+            // Auto-save game state changes
+            useEffect(() => {
+                if (gameState && sessionId && isPlayer1) {
+                    saveSession(sessionId, isPlayer1, gameState);
+                }
+            }, [gameState]);
+
             const setupConnection = (conn, asPlayer1) => {
                 conn.on('open', () => {
                     addLog('Connection opened!');
@@ -179,10 +233,15 @@
                     setConnected(true);
 
                     if (asPlayer1) {
-                        // Player 1 initializes the game
-                        const initialState = initializeGame(true);
-                        setGameState(initialState);
+                        // Player 1 initializes the game or uses saved state
+                        let initialState = gameState;
+                        if (!initialState) {
+                            initialState = initializeGame(true);
+                            setGameState(initialState);
+                        }
                         sendGameState(initialState);
+                        // Save session
+                        saveSession(peerRef.current?.id, true, initialState);
                         addLog('Game initialized! Player 1 starts.');
                     } else {
                         addLog('Waiting for game initialization...');
@@ -225,6 +284,10 @@
             const handleMessage = (data) => {
                 if (data.type === 'gameState') {
                     setGameState(data.state);
+                    // Save updated state
+                    if (sessionId) {
+                        saveSession(sessionId, isPlayer1, data.state);
+                    }
                     addLog('Game state updated');
                 } else if (data.type === 'action') {
                     processAction(data.action);
@@ -588,6 +651,7 @@
                                 isMyTurn() ? '✓ Your Turn' : '⏳ Opponent\'s Turn'
                             )
                         ),
+                        React.createElement('div', { className: 'd-flex gap-3 align-items-center flex-wrap' },
                         React.createElement('div', { className: 'd-flex gap-4' },
                             isPlayer1 && React.createElement('div', null,
                                 React.createElement('div', { className: 'text-muted small' }, 'Points'),
@@ -601,7 +665,12 @@
                                 React.createElement('div', { className: 'text-muted small' }, 'Hand'),
                                 React.createElement('div', { className: 'fs-4 fw-bold' }, myHand.length)
                             )
-                        )
+                        ),
+                        isPlayer1 && React.createElement('button', {
+                            className: 'btn btn-outline-danger btn-sm',
+                            onClick: clearSession
+                        }, '🔄 New Game')
+                    )
                     )
                     ),
 
