@@ -1137,7 +1137,17 @@
             return React.createElement('div', { className: 'container my-4' },
                 toast && React.createElement('div', { className: 'toast-notification' }, toast),
 
-                React.createElement('h1', { className: 'text-center mb-4' }, '🎴 The GAME'),
+                React.createElement('div', { className: 'd-flex justify-content-between align-items-center mb-4' },
+                    React.createElement('h1', { className: 'mb-0' },
+                        connected && gameState
+                            ? `🎴 The GAME - ${isPlayer1 ? 'P1' : 'P2'}`
+                            : '🎴 The GAME'
+                    ),
+                    connected && gameState && isPlayer1 && React.createElement('button', {
+                        className: 'btn btn-outline-danger btn-sm',
+                        onClick: clearSession
+                    }, '🔄 New Game')
+                ),
 
                 !connected && React.createElement('div', {
                     className: 'alert alert-danger text-center mb-3 py-2',
@@ -1177,52 +1187,28 @@
                         winner === 'me' ? '🎉 You Won!' : '😔 You Lost!'
                     ),
 
-                    React.createElement('div', { className: 'card' },
-                        React.createElement('div', { className: 'card-body d-flex justify-content-between align-items-center flex-wrap gap-3' },
-                        React.createElement('div', null,
-                            React.createElement('div', { className: 'fs-5 fw-bold text-primary' },
-                                isPlayer1 ? '👤 Player 1' : '👤 Player 2'
-                            )
-                        ),
-                        React.createElement('div', { className: 'd-flex gap-3 align-items-center flex-wrap' },
-                        React.createElement('div', { className: 'd-flex gap-4' },
-                            React.createElement('div', null,
-                                React.createElement('div', { className: 'text-muted small' }, 'Points (P1:P2)'),
-                                React.createElement('div', { className: 'fs-4 fw-bold' },
-                                    isPlayer1
-                                        ? React.createElement('span', null,
-                                            React.createElement('span', { className: 'text-primary fs-3' }, gameState?.player1?.points || 0),
-                                            ':',
-                                            gameState?.player2?.pleasureCards?.length || 0
-                                        )
-                                        : React.createElement('span', null,
-                                            gameState?.player1?.points || 0,
-                                            ':',
-                                            React.createElement('span', { className: 'text-primary fs-3' }, gameState?.player2?.pleasureCards?.length || 0)
-                                        )
-                                )
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('div', { className: 'text-muted small' }, 'Your Hand'),
-                                React.createElement('div', { className: 'fs-4 fw-bold' }, myHand.length)
-                            ),
-                            React.createElement('div', null,
-                                React.createElement('div', { className: 'text-muted small' }, 'Opponent Hand'),
-                                React.createElement('div', { className: 'fs-4 fw-bold' }, isPlayer1 ? gameState.player2.hand.length : gameState.player1.hand.length)
-                            )
-                        ),
-                        isPlayer1 && React.createElement('button', {
-                            className: 'btn btn-outline-danger btn-sm',
-                            onClick: clearSession
-                        }, '🔄 New Game')
-                    )
-                    )
-                    ),
 
                     React.createElement('div', { className: 'card' },
-                        React.createElement('div', { className: 'card-header bg-light' },
+                        React.createElement('div', { className: 'card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2' },
                             React.createElement('h5', { className: 'mb-0' },
                                 isMyTurn() ? '🎴 Your Turn' : '⏳ Opponent\'s Turn'
+                            ),
+                            React.createElement('div', { className: 'fs-5 fw-bold' },
+                                isPlayer1
+                                    ? React.createElement('span', null,
+                                        React.createElement('span', { className: 'text-primary' }, gameState?.player1?.points || 0),
+                                        ':',
+                                        gameState?.player2?.pleasureCards?.length || 0,
+                                        ' ',
+                                        React.createElement('span', { className: 'text-muted small' }, `(${isPlayer1 ? gameState.player2.hand.length : gameState.player1.hand.length})`)
+                                    )
+                                    : React.createElement('span', null,
+                                        gameState?.player1?.points || 0,
+                                        ':',
+                                        React.createElement('span', { className: 'text-primary' }, gameState?.player2?.pleasureCards?.length || 0),
+                                        ' ',
+                                        React.createElement('span', { className: 'text-muted small' }, `(${isPlayer1 ? gameState.player2.hand.length : gameState.player1.hand.length})`)
+                                    )
                             )
                         ),
                         React.createElement('div', { className: 'card-body' },
