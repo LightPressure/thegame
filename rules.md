@@ -52,25 +52,41 @@ To complete a set, you need **3 cards**:
 ## Turn Structure
 
 ### Player 1's Turn:
-1. **Draw** 1 card from Main Deck (only once per turn!)
-2. **Play your action** - Choose ONE:
-   - **Play Set** (Position + Intensity + Time):
-     - Add it to the **Queue** (public area)
-     - Earn **1 point**
-     - **Optional:** Spend 1 point to draw from Equipment Deck and attach to this punishment
-   - **Play Special Card** (Steal Card or Ask For Card)
-   - **Discard** 1 card from your hand (if you can't/don't want to play)
-3. Your turn ends, turn passes to Player 2
+**Choose ONE action per turn:**
+
+**Option A - Play a Set:**
+- Play 3 cards (Position + Intensity + Time)
+- Add it to the **Queue** (public area)
+- Earn **1 point**
+- **Optional:** Spend 1 point to draw from Equipment Deck and attach to this punishment
+
+**Option B - Play Special Card:**
+- Play a Special Card (Steal Card or Ask For Card)
+- Use its effect
+
+**Option C - Can't/Won't Play:**
+- If you have 3+ cards selected: **Discard** 1 card from your hand
+- If you have no cards selected or want to draw: **Draw** 1 card from Main Deck
+
+Turn ends, passes to Player 2
 
 ### Player 2's Turn:
-1. **Draw** 1 card from Main Deck (only once per turn!)
-2. **Play your action** - Choose ONE:
-   - **Play Set** (Position + Intensity + Time):
-     - Add it to the **Queue** (public area)
-     - Draw **1 card** from Pleasure Deck (keep it - this is your reward!)
-   - **Play Special Card** (Steal Card or Ask For Card)
-   - **Discard** 1 card from your hand (if you can't/don't want to play)
-3. Your turn ends, turn passes to Player 1
+**Choose ONE action per turn:**
+
+**Option A - Play a Set:**
+- Play 3 cards (Position + Intensity + Time)
+- Add it to the **Queue** (public area)
+- Draw **1 card** from Pleasure Deck (keep it - this is your reward!)
+
+**Option B - Play Special Card:**
+- Play a Special Card (Steal Card or Ask For Card)
+- Use its effect
+
+**Option C - Can't/Won't Play:**
+- If you have 1 card selected: **Discard** that card from your hand
+- If you have no cards selected or want to draw: **Draw** 1 card from Main Deck
+
+Turn ends, passes to Player 1
 
 ---
 

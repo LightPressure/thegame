@@ -41,7 +41,6 @@
             const [showAskDialog, setShowAskDialog] = useState(false);
             const [askingCardType, setAskingCardType] = useState(null);
             const [logsCollapsed, setLogsCollapsed] = useState(true);
-            const [hasDrawnThisTurn, setHasDrawnThisTurn] = useState(false);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
@@ -113,10 +112,18 @@
 
             useEffect(() => {
                 const urlParams = new URLSearchParams(window.location.search);
-                const peerId = urlParams.get('peer');
+                let peerId = urlParams.get('peer');
 
                 // Try to load saved session
                 const savedSession = loadSession();
+
+                // If no peer ID in URL but we have a saved session for Player 2, restore it
+                if (!peerId && savedSession && !savedSession.isPlayer1 && savedSession.peerId) {
+                    peerId = savedSession.peerId;
+                    // Redirect to the proper URL with peer ID
+                    window.history.replaceState({}, '', `${window.location.pathname}?peer=${peerId}`);
+                    addLog('Restoring Player 2 session...');
+                }
 
                 if (!peerId) {
                     // Player 1: Create peer and wait for connection
@@ -184,6 +191,10 @@
                     addLog('Initializing as Player 2...');
                     setStatus('connecting');
 
+                    // Save peer ID for reconnection
+                    saveSession(peerId, false, null);
+                    setSessionId(peerId);
+
                     const peer = new Peer({
                         config: {
                             iceServers: [
@@ -228,13 +239,6 @@
                     saveSession(sessionId, isPlayer1, gameState);
                 }
             }, [gameState]);
-
-            // Reset draw flag when turn changes
-            useEffect(() => {
-                if (gameState && isMyTurn()) {
-                    setHasDrawnThisTurn(false);
-                }
-            }, [gameState?.currentTurn]);
 
             const setupConnection = (conn, asPlayer1) => {
                 conn.on('open', () => {
@@ -339,6 +343,10 @@
                             addLog(`Opponent drew a pleasure card`);
                             break;
 
+                        case 'drawCard':
+                            addLog(`Opponent drew a card`);
+                            break;
+
                         case 'stealCard':
                             addLog(`Opponent used Steal Card`);
                             break;
@@ -380,7 +388,7 @@
             };
 
             const handleDrawCard = () => {
-                if (!isMyTurn() || !gameState || hasDrawnThisTurn) return;
+                if (!isMyTurn() || !gameState) return;
 
                 setGameState(prev => {
                     const newState = { ...prev };
@@ -390,8 +398,10 @@
                         const drawnCard = newState.mainDeck.shift();
                         newState[playerKey].hand.push(drawnCard);
                         addLog(`Drew: ${drawnCard.name}`);
-                        setHasDrawnThisTurn(true);
                     }
+
+                    // Switch turn after drawing
+                    newState.currentTurn = newState.currentTurn === 1 ? 2 : 1;
 
                     // Send state after update
                     setTimeout(() => {
@@ -400,6 +410,11 @@
 
                     return newState;
                 });
+
+                const action = {
+                    type: 'drawCard'
+                };
+                sendAction(action);
             };
 
             const handlePlaySet = () => {
@@ -902,8 +917,8 @@
                         React.createElement('button', {
                             className: 'btn btn-primary',
                             onClick: handleDrawCard,
-                            disabled: !isMyTurn() || hasDrawnThisTurn
-                        }, hasDrawnThisTurn ? '✓ Card Drawn' : '📥 Draw Card'),
+                            disabled: !isMyTurn() || selectedCards.length > 0
+                        }, '📥 Draw Card (end turn)'),
                         React.createElement('button', {
                             className: 'btn btn-success',
                             onClick: handlePlaySet,
@@ -912,8 +927,8 @@
                         React.createElement('button', {
                             className: 'btn btn-danger',
                             onClick: handleDiscard,
-                            disabled: !isMyTurn() || selectedCards.length !== 1 || selectedCards[0].type === 'special'
-                        }, '🗑️ Discard'),
+                            disabled: !isMyTurn() || selectedCards.length !== 1 || selectedCards[0]?.type === 'special'
+                        }, '🗑️ Discard (end turn)'),
                         React.createElement('button', {
                             className: 'btn btn-info',
                             onClick: handleStealCard,
