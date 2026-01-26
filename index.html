@@ -1266,35 +1266,29 @@
                     ),
 
                     React.createElement('div', { className: 'd-flex gap-2 flex-wrap' },
-                        myHand.length < 5 && React.createElement('button', {
-                            className: 'btn btn-primary',
-                            onClick: handleDrawCard,
-                            disabled: !isMyTurn() || selectedCards.length > 0
+                        myHand.length < 5 && isMyTurn() && selectedCards.length === 0 && React.createElement('button', {
+                            className: 'btn btn-primary btn-lg',
+                            onClick: handleDrawCard
                         }, '📥 Draw Card (end turn)'),
-                        React.createElement('button', {
-                            className: 'btn btn-success',
-                            onClick: handlePlaySet,
-                            disabled: !canPlaySet()
+                        canPlaySet() && React.createElement('button', {
+                            className: 'btn btn-success btn-lg',
+                            onClick: handlePlaySet
                         }, '✅ Play Set (3 cards)'),
-                        myHand.length >= 5 && React.createElement('button', {
-                            className: 'btn btn-danger',
-                            onClick: handleDiscard,
-                            disabled: !isMyTurn() || selectedCards.length !== 1 || selectedCards[0]?.type === 'special'
+                        myHand.length >= 5 && isMyTurn() && selectedCards.length === 1 && selectedCards[0]?.type !== 'special' && React.createElement('button', {
+                            className: 'btn btn-danger btn-lg',
+                            onClick: handleDiscard
                         }, '🗑️ Discard (end turn)'),
-                        React.createElement('button', {
-                            className: 'btn btn-info',
-                            onClick: handleStealCard,
-                            disabled: !isMyTurn() || selectedCards.length !== 1 || selectedCards[0]?.type !== 'special' || selectedCards[0]?.action !== 'steal'
+                        isMyTurn() && selectedCards.length === 1 && selectedCards[0]?.type === 'special' && selectedCards[0]?.action === 'steal' && React.createElement('button', {
+                            className: 'btn btn-info btn-lg',
+                            onClick: handleStealCard
                         }, '🃏 Steal Card'),
-                        React.createElement('button', {
-                            className: 'btn btn-info',
-                            onClick: handleAskForCard,
-                            disabled: !isMyTurn() || selectedCards.length !== 1 || selectedCards[0]?.type !== 'special' || selectedCards[0]?.action !== 'ask'
+                        isMyTurn() && selectedCards.length === 1 && selectedCards[0]?.type === 'special' && selectedCards[0]?.action === 'ask' && React.createElement('button', {
+                            className: 'btn btn-info btn-lg',
+                            onClick: handleAskForCard
                         }, '❓ Ask For Card'),
-                        isPlayer1 && React.createElement('button', {
-                            className: 'btn btn-warning',
-                            onClick: handleDrawEquipment,
-                            disabled: !isMyTurn() || myStats.points < 1 || !gameState?.queue?.length
+                        isPlayer1 && isMyTurn() && myStats.points >= 1 && gameState?.queue?.length > 0 && React.createElement('button', {
+                            className: 'btn btn-warning btn-lg',
+                            onClick: handleDrawEquipment
                         }, '🔧 Add Equipment (1pt)')
                     ),
 
@@ -1386,13 +1380,13 @@
                     )
                 ),
 
-                !isPlayer1 && myStats?.pleasureCards?.length > 0 && React.createElement('div', { className: 'card' },
+                (isPlayer1 ? gameState?.player2?.pleasureCards?.length > 0 : myStats?.pleasureCards?.length > 0) && React.createElement('div', { className: 'card' },
                     React.createElement('div', { className: 'card-header' },
-                        React.createElement('h5', { className: 'mb-0' }, '💝 Your Pleasure Cards')
+                        React.createElement('h5', { className: 'mb-0' }, isPlayer1 ? '💝 Player 2 Pleasure Cards' : '💝 Your Pleasure Cards')
                     ),
                     React.createElement('div', { className: 'card-body' },
                         React.createElement('div', { className: 'd-flex gap-3 flex-wrap' },
-                            myStats.pleasureCards.map((card, idx) =>
+                            (isPlayer1 ? gameState.player2.pleasureCards : myStats.pleasureCards).map((card, idx) =>
                                 React.createElement('div', {
                                     className: 'game-card card-pleasure',
                                     key: idx
