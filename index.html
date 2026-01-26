@@ -1192,13 +1192,11 @@
                         ),
                         React.createElement('div', { className: 'd-flex gap-3 align-items-center flex-wrap' },
                         React.createElement('div', { className: 'd-flex gap-4' },
-                            isPlayer1 && React.createElement('div', null,
+                            React.createElement('div', null,
                                 React.createElement('div', { className: 'text-muted small' }, 'Points'),
-                                React.createElement('div', { className: 'fs-4 fw-bold' }, myStats.points || 0)
-                            ),
-                            !isPlayer1 && React.createElement('div', null,
-                                React.createElement('div', { className: 'text-muted small' }, 'Pleasure Cards'),
-                                React.createElement('div', { className: 'fs-4 fw-bold' }, myStats.pleasureCards.length)
+                                React.createElement('div', { className: 'fs-4 fw-bold' },
+                                    `${gameState?.player1?.points || 0}:${gameState?.player2?.pleasureCards?.length || 0}`
+                                )
                             ),
                             React.createElement('div', null,
                                 React.createElement('div', { className: 'text-muted small' }, 'Your Hand'),
@@ -1287,7 +1285,7 @@
                         isPlayer1 && React.createElement('button', {
                             className: 'btn btn-warning',
                             onClick: handleDrawEquipment,
-                            disabled: !isMyTurn() || myStats.points < 1 || gameState.queue.length === 0
+                            disabled: !isMyTurn() || myStats.points < 1 || !gameState?.queue?.length
                         }, '🔧 Add Equipment (1pt)')
                     ),
 
@@ -1341,16 +1339,16 @@
                     )
                 ),
 
-                React.createElement('div', { className: 'alert alert-warning mt-4' },
+                connected && gameState && React.createElement('div', { className: 'alert alert-warning mt-4' },
                     React.createElement('div', { className: 'fs-5 fw-bold mb-3', style: { color: 'white' } },
-                        `🔥 Queue (${gameState.queue.length}/5)`
+                        `🔥 Queue (${gameState?.queue?.length || 0}/5)`
                     ),
-                    gameState.queue.length === 0 && React.createElement('div', {
+                    (!gameState?.queue || gameState.queue.length === 0) && React.createElement('div', {
                         className: 'fst-italic',
                         style: { color: 'rgba(255, 255, 255, 0.8)' }
                     }, 'No punishments queued yet'),
                     React.createElement('div', { className: 'vstack gap-2' },
-                        gameState.queue.map((item, idx) =>
+                        (gameState?.queue || []).map((item, idx) =>
                             React.createElement('div', { className: 'card border-warning', key: idx },
                                 React.createElement('div', { className: 'card-body p-3' },
                                 React.createElement('div', { className: 'd-flex gap-2 flex-wrap mb-2' },
@@ -1370,7 +1368,7 @@
                     )
                 ),
 
-                !isPlayer1 && myStats.pleasureCards.length > 0 && React.createElement('div', { className: 'card' },
+                !isPlayer1 && myStats?.pleasureCards?.length > 0 && React.createElement('div', { className: 'card' },
                     React.createElement('div', { className: 'card-header' },
                         React.createElement('h5', { className: 'mb-0' }, '💝 Your Pleasure Cards')
                     ),
