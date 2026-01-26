@@ -355,22 +355,27 @@
 
                     if (asPlayer1) {
                         // Player 1 initializes the game or uses saved state
-                        console.log('[CONNECTION] Player 1 checking for existing game state');
-                        let initialState = gameState;
-                        if (!initialState) {
-                            console.log('[CONNECTION] No game state - initializing new game');
-                            initialState = initializeGame(true);
-                            setGameState(initialState);
-                            addLog('🎮 New game initialized');
-                        } else {
-                            console.log('[CONNECTION] Using existing game state (Queue:', initialState.queue.length, ')');
-                            addLog(`🎮 Resuming game (Queue: ${initialState.queue.length})`);
-                        }
-                        console.log('[CONNECTION] Sending game state to Player 2');
-                        sendGameState(initialState);
-                        // Save session
-                        saveSession(peerRef.current?.id, true, initialState);
-                        addLog('✅ Player 1 starts.');
+                        // Use a small delay to ensure React state has been updated from restoration
+                        setTimeout(() => {
+                            console.log('[CONNECTION] Player 1 checking for existing game state');
+                            setGameState(prevState => {
+                                let initialState = prevState;
+                                if (!initialState) {
+                                    console.log('[CONNECTION] No game state - initializing new game');
+                                    initialState = initializeGame(true);
+                                    addLog('🎮 New game initialized');
+                                } else {
+                                    console.log('[CONNECTION] Using existing game state (Queue:', initialState.queue.length, ')');
+                                    addLog(`🎮 Resuming game (Queue: ${initialState.queue.length})`);
+                                }
+                                console.log('[CONNECTION] Sending game state to Player 2');
+                                sendGameState(initialState);
+                                // Save session
+                                saveSession(peerRef.current?.id, true, initialState);
+                                addLog('✅ Player 1 starts.');
+                                return initialState;
+                            });
+                        }, 100);
                     } else {
                         console.log('[CONNECTION] Player 2 waiting for game state from Player 1');
                         addLog('⏳ Waiting for game initialization...');
