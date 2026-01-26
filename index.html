@@ -40,6 +40,7 @@
             const [sessionId, setSessionId] = useState(null);
             const [showAskDialog, setShowAskDialog] = useState(false);
             const [askingCardType, setAskingCardType] = useState(null);
+            const [logsCollapsed, setLogsCollapsed] = useState(true);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
@@ -704,11 +705,25 @@
                     status === 'connected' ? '✅ Connected!' : '🔧 Initializing...'
                 ),
 
-                React.createElement('div', { className: 'log-container border rounded p-3 mb-3 bg-light' },
-                    logs.map((log, i) =>
-                        React.createElement('div', { className: 'border-start border-primary border-3 bg-white rounded p-2 mb-1 small', key: i },
-                            React.createElement('span', { className: 'text-muted me-2 small' }, log.time),
-                            React.createElement('span', null, log.message)
+                React.createElement('div', { className: 'card mb-3' },
+                    React.createElement('div', {
+                        className: 'card-header bg-light d-flex justify-content-between align-items-center',
+                        style: { cursor: 'pointer' },
+                        onClick: () => setLogsCollapsed(!logsCollapsed)
+                    },
+                        React.createElement('strong', null, '📋 Activity Log'),
+                        React.createElement('span', { className: 'badge bg-secondary' }, logsCollapsed ? '▼ Show' : '▲ Hide')
+                    ),
+                    !logsCollapsed && React.createElement('div', { className: 'card-body p-0' },
+                        React.createElement('div', { className: 'log-container p-3' },
+                            logs.length === 0 ?
+                                React.createElement('div', { className: 'text-muted fst-italic small' }, 'No activity yet') :
+                                logs.map((log, i) =>
+                                    React.createElement('div', { className: 'border-start border-primary border-3 bg-light rounded p-2 mb-1 small', key: i },
+                                        React.createElement('span', { className: 'text-muted me-2 small' }, log.time),
+                                        React.createElement('span', null, log.message)
+                                    )
+                                )
                         )
                     )
                 ),
