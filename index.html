@@ -1020,7 +1020,13 @@
                         ),
                         React.createElement('div', { className: 'card-body' },
                             React.createElement('div', { className: 'd-flex gap-3 flex-wrap' },
-                                myHand.map(card =>
+                                [...myHand].sort((a, b) => {
+                                    // Sort by type first, then by name
+                                    const typeOrder = { position: 1, intensity: 2, time: 3, special: 4 };
+                                    const typeCompare = (typeOrder[a.type] || 5) - (typeOrder[b.type] || 5);
+                                    if (typeCompare !== 0) return typeCompare;
+                                    return a.name.localeCompare(b.name);
+                                }).map(card =>
                                     React.createElement('div', {
                                         className: `game-card card border-3 ${selectedCards.find(c => c.id === card.id) ? 'border-primary bg-primary-subtle' : card.type === 'position' ? 'border-primary' : card.type === 'intensity' ? 'border-danger' : card.type === 'time' ? 'border-success' : 'border-warning'}`,
                                         key: card.id,
