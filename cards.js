@@ -1,7 +1,7 @@
 // THE GAME - CARD DEFINITIONS
 // Easy to modify card data structure
 
-const GAME_CARDS = {
+window.GAME_CARDS = window.GAME_CARDS || {
   
   // ============================================
   // MAIN DECK - Build sets from these 3 types
@@ -116,28 +116,28 @@ const GAME_CARDS = {
 // ============================================
 // HELPER FUNCTION - Get all main deck cards combined
 // ============================================
-function getAllMainDeckCards() {
+window.getAllMainDeckCards = window.getAllMainDeckCards || function() {
   return [
-    ...GAME_CARDS.mainDeck.position,
-    ...GAME_CARDS.mainDeck.intensity,
-    ...GAME_CARDS.mainDeck.time,
-    ...GAME_CARDS.mainDeck.special,
+    ...window.GAME_CARDS.mainDeck.position,
+    ...window.GAME_CARDS.mainDeck.intensity,
+    ...window.GAME_CARDS.mainDeck.time,
+    ...window.GAME_CARDS.mainDeck.special,
   ];
-}
+};
 
 // ============================================
 // HELPER FUNCTION - Shuffle deck
 // ============================================
-function shuffleDeck(deck) {
+window.shuffleDeck = window.shuffleDeck || function(deck) {
   const shuffled = [...deck];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
-}
+};
 
 // Export for use in game
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { GAME_CARDS, getAllMainDeckCards, shuffleDeck };
+  module.exports = { GAME_CARDS: window.GAME_CARDS, getAllMainDeckCards: window.getAllMainDeckCards, shuffleDeck: window.shuffleDeck };
 }
