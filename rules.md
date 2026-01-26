@@ -133,11 +133,16 @@ Turn ends, passes to Player 1
 
 ### Player 1 Actions:
 - Complete set → Add to queue + Earn 1 point
-- Spend 1 point → Draw from Equipment Deck → Attach to punishment in queue
+- Spend points on equipment:
+  - 1 point = Random equipment from deck → Attach to most recent punishment
+  - 3 points = Choose specific equipment → Attach to most recent punishment
 - Can attach multiple equipment to same punishment (if you have points)
 
 ### Player 2 Actions:
-- Complete set → Draw 1 pleasure card (set is discarded, NOT added to queue)
+- Complete set → Cards return to main deck + Earn 1 point
+- Spend points on pleasure cards:
+  - 1 point = Draw random pleasure card
+  - 3 points = Choose specific pleasure card
 - Use pleasure card effects:
   - **"Skip Punishment"** - Remove one punishment from queue
   - **"Remove Equipment"** - Remove one equipment card from any punishment
