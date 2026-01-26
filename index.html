@@ -406,6 +406,8 @@
                     equipment: []
                 };
 
+                let updatedState;
+
                 setGameState(prev => {
                     const newState = { ...prev };
                     const playerKey = isPlayer1 ? 'player1' : 'player2';
@@ -456,6 +458,9 @@
                         }, 100);
                     }
 
+                    // Store updated state for sending
+                    updatedState = newState;
+
                     return newState;
                 });
 
@@ -468,10 +473,10 @@
                 };
                 sendAction(action);
 
-                // Use setTimeout to ensure state is updated before sending
+                // Send the updated state
                 setTimeout(() => {
-                    if (connRef.current && connRef.current.open && gameState) {
-                        sendGameState(gameState);
+                    if (connRef.current && connRef.current.open && updatedState) {
+                        sendGameState(updatedState);
                     }
                 }, 50);
             };
