@@ -542,8 +542,12 @@
                     return; // Wait for cards to load
                 }
 
-                // For Player 1, wait for theme selection (handled by theme selector UI)
+                // For Player 1, show theme selector first
                 if (!peerId && !theme) {
+                    setShowThemeSelector(true);
+                    setStatus('theme_selection');
+                    setIsPlayer1(true);
+                    addLog('🎮 Select a game theme to start...');
                     return; // Waiting for theme selection
                 }
 
@@ -560,16 +564,8 @@
                 }
 
                 if (!peerId) {
-                    // Player 1: Show theme selector first
+                    // Player 1: Create peer after theme is selected
                     console.log('[INIT] No peer ID in URL - Player 1 mode');
-                    setIsPlayer1(true);
-
-                    // Check if theme is already selected
-                    if (!theme) {
-                        setShowThemeSelector(true);
-                        setStatus('theme_selection');
-                        return; // Wait for theme selection
-                    }
 
                     // Try to reuse the same peer ID from saved session
                     let savedPeerId = null;
