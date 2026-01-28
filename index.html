@@ -313,7 +313,7 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="cards.js"></script>
+    <!-- Cards loaded dynamically based on theme selection -->
 </head>
 <body>
     <div id="root"></div>
@@ -321,15 +321,15 @@
     <script>
         const { useState, useEffect, useRef } = React;
 
-        // Import card data
-        const { GAME_CARDS, getAllMainDeckCards, shuffleDeck } = window;
-
         function App() {
             const [logs, setLogs] = useState([]);
             const [status, setStatus] = useState('initializing');
             const [isPlayer1, setIsPlayer1] = useState(false);
             const [gameLink, setGameLink] = useState('');
             const [connected, setConnected] = useState(false);
+            const [theme, setTheme] = useState(null); // 'fantasy' or 'original'
+            const [cardsLoaded, setCardsLoaded] = useState(false);
+            const [showThemeSelector, setShowThemeSelector] = useState(false);
 
             // Game state
             const [gameState, setGameState] = useState(null);
@@ -354,6 +354,23 @@
             const addLog = (message) => {
                 const time = new Date().toLocaleTimeString();
                 setLogs(prev => [...prev, { time, message }]);
+            };
+
+            // Load cards dynamically based on theme
+            const loadCards = (selectedTheme) => {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    const cardsFile = selectedTheme === 'fantasy' ? 'cards_fantasy.js' : 'cards.js';
+                    script.src = cardsFile;
+                    script.onload = () => {
+                        setCardsLoaded(true);
+                        setTheme(selectedTheme);
+                        addLog(`✨ Loaded ${selectedTheme} theme`);
+                        resolve();
+                    };
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
             };
 
             const playNotificationSound = () => {
@@ -482,6 +499,7 @@
 
             // Initialize game state
             const initializeGame = (asPlayer1) => {
+                const { GAME_CARDS, getAllMainDeckCards, shuffleDeck } = window;
                 const mainDeck = shuffleDeck(getAllMainDeckCards());
                 const equipmentDeck = shuffleDeck([...GAME_CARDS.equipmentDeck]);
                 const pleasureDeck = shuffleDeck([...GAME_CARDS.pleasureDeck]);
@@ -511,7 +529,23 @@
                 console.log('[INIT] Starting initialization...');
                 const urlParams = new URLSearchParams(window.location.search);
                 let peerId = urlParams.get('peer');
+                let themeParam = urlParams.get('theme') || 'fantasy'; // Default to fantasy
                 console.log('[INIT] URL peer ID:', peerId || '(none)');
+                console.log('[INIT] Theme:', themeParam);
+
+                // For Player 2, load cards automatically from URL
+                if (peerId && !cardsLoaded) {
+                    loadCards(themeParam).catch(err => {
+                        console.error('[INIT] Failed to load cards:', err);
+                        addLog('❌ Failed to load game cards');
+                    });
+                    return; // Wait for cards to load
+                }
+
+                // For Player 1, wait for theme selection (handled by theme selector UI)
+                if (!peerId && !theme) {
+                    return; // Waiting for theme selection
+                }
 
                 // Try to load saved session
                 const savedSession = loadSession();
@@ -526,9 +560,16 @@
                 }
 
                 if (!peerId) {
-                    // Player 1: Create peer and wait for connection
-                    console.log('[INIT] No peer ID in URL - initializing as Player 1');
+                    // Player 1: Show theme selector first
+                    console.log('[INIT] No peer ID in URL - Player 1 mode');
                     setIsPlayer1(true);
+
+                    // Check if theme is already selected
+                    if (!theme) {
+                        setShowThemeSelector(true);
+                        setStatus('theme_selection');
+                        return; // Wait for theme selection
+                    }
 
                     // Try to reuse the same peer ID from saved session
                     let savedPeerId = null;
@@ -560,7 +601,7 @@
                     peer.on('open', (id) => {
                         console.log('[PEER] Player 1 peer opened with ID:', id);
                         addLog(`✅ Peer created with ID: ${id.substring(0, 8)}...`);
-                        const link = `${window.location.origin}${window.location.pathname}?peer=${id}`;
+                        const link = `${window.location.origin}${window.location.pathname}?peer=${id}&theme=${theme}`;
                         setGameLink(link);
                         setStatus('waiting');
                         setSessionId(id);
@@ -671,7 +712,7 @@
                         peerRef.current.destroy();
                     }
                 };
-            }, []);
+            }, [cardsLoaded, theme]);
 
             // Auto-save game state changes for BOTH players
             useEffect(() => {
@@ -885,7 +926,7 @@
                     // If main deck is empty, reshuffle discard pile
                     if (newState.mainDeck.length === 0 && newState.discardPile.length > 0) {
                         console.log('[DRAW] Main deck empty, reshuffling discard pile');
-                        newState.mainDeck = shuffleDeck([...newState.discardPile]);
+                        newState.mainDeck = window.shuffleDeck([...newState.discardPile]);
                         newState.discardPile = [];
                         addLog('♻️ Reshuffled discard pile into deck');
                     }
@@ -1025,7 +1066,7 @@
                     // Draw a replacement card from main deck
                     if (newState.mainDeck.length === 0 && newState.discardPile.length > 0) {
                         console.log('[DISCARD] Main deck empty, reshuffling discard pile');
-                        newState.mainDeck = shuffleDeck([...newState.discardPile]);
+                        newState.mainDeck = window.shuffleDeck([...newState.discardPile]);
                         newState.discardPile = [];
                         addLog('♻️ Reshuffled discard pile into deck');
                     }
@@ -1393,6 +1434,31 @@
                     React.createElement('strong', null, '🔞 18+ Adult Content • '),
                     React.createElement('span', { className: 'small' },
                         'Intimate P2P card game for couples exploring consensual discipline & pleasure'
+                    )
+                ),
+
+                showThemeSelector && React.createElement('div', { className: 'card mb-4' },
+                    React.createElement('div', { className: 'card-header' },
+                        React.createElement('h5', { className: 'mb-0' }, '🎮 Select Game Theme')
+                    ),
+                    React.createElement('div', { className: 'card-body' },
+                        React.createElement('p', null, 'Choose a theme for the game:'),
+                        React.createElement('div', { className: 'd-grid gap-2' },
+                            React.createElement('button', {
+                                className: 'btn btn-lg btn-primary',
+                                onClick: async () => {
+                                    await loadCards('fantasy');
+                                    setShowThemeSelector(false);
+                                }
+                            }, '✨ Fantasy Magic Duel (Default)'),
+                            React.createElement('button', {
+                                className: 'btn btn-lg btn-outline-danger',
+                                onClick: async () => {
+                                    await loadCards('original');
+                                    setShowThemeSelector(false);
+                                }
+                            }, '🔥 Original 18+ Game')
+                        )
                     )
                 ),
 
