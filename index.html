@@ -1448,12 +1448,15 @@
 
 
                 !connected && isPlayer1 && gameLink && React.createElement('div', null,
-                    React.createElement('div', { className: 'border rounded p-4 mb-3 bg-light text-center' },
-                        React.createElement('div', {
-                            className: 'bg-white p-3 rounded d-inline-block mb-3',
-                            ref: qrRef
-                        }),
-                        React.createElement('div', { className: 'btn-group', role: 'group' },
+                    React.createElement('div', { className: 'border rounded p-4 mb-3 bg-light text-center mt-3' },
+                        React.createElement('div', { className: 'd-flex justify-content-center mb-4' },
+                            React.createElement('div', {
+                                className: 'bg-white p-3 rounded',
+                                ref: qrRef
+                            })
+                        ),
+                        React.createElement('div', { className: 'd-flex justify-content-center' },
+                            React.createElement('div', { className: 'btn-group', role: 'group' },
                             React.createElement('input', {
                                 type: 'radio',
                                 className: 'btn-check',
@@ -1491,6 +1494,7 @@
                                 className: 'btn btn-lg btn-outline-danger',
                                 htmlFor: 'theme-original'
                             }, '🔥 Original')
+                            )
                         )
                     ),
                     React.createElement('button', {
