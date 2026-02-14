@@ -47,6 +47,64 @@
             z-index: 0;
         }
 
+        /* Countdown Timer Modal */
+        .countdown-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .countdown-container {
+            text-align: center;
+            padding: 3rem;
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-dark));
+            border: 3px solid var(--secondary-pink);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(212, 80, 107, 0.5);
+            min-width: 400px;
+        }
+
+        .countdown-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-rose);
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(212, 80, 107, 0.5);
+        }
+
+        .countdown-card {
+            margin: 2rem 0;
+            padding: 1.5rem;
+            background: rgba(74, 25, 66, 0.4);
+            border: 2px solid var(--accent-rose);
+            border-radius: 15px;
+        }
+
+        .countdown-time {
+            font-size: 8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 4px 20px rgba(232, 118, 143, 0.6);
+            line-height: 1;
+            margin: 2rem 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .countdown-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
         @keyframes sparkle {
             0%, 100% {
                 opacity: 0.3;
@@ -360,16 +418,89 @@
             const [showEquipmentDialog, setShowEquipmentDialog] = useState(false);
             const [drawnEquipment, setDrawnEquipment] = useState(null);
             const [drawnPleasure, setDrawnPleasure] = useState(null);
+            const [countdownActive, setCountdownActive] = useState(false);
+            const [countdownCard, setCountdownCard] = useState(null);
+            const [countdownType, setCountdownType] = useState(null); // 'punishment' or 'pleasure'
+            const [timeRemaining, setTimeRemaining] = useState(0);
 
             const peerRef = useRef(null);
             const connRef = useRef(null);
             const qrRef = useRef(null);
             const previousTurnRef = useRef(null);
+            const countdownIntervalRef = useRef(null);
 
             const addLog = (message) => {
                 const time = new Date().toLocaleTimeString();
                 setLogs(prev => [...prev, { time, message }]);
             };
+
+            // Start countdown for punishment or pleasure
+            const startCountdown = (card, type) => {
+                let duration;
+                if (type === 'punishment' && card.time) {
+                    duration = card.time.duration;
+                } else if (type === 'pleasure' && card.duration) {
+                    // Parse duration string (e.g., "5 min" -> 300 seconds)
+                    const match = card.duration.match(/(\d+)\s*min/);
+                    duration = match ? parseInt(match[1]) * 60 : 0;
+                } else {
+                    duration = 0;
+                }
+
+                if (duration === 0) {
+                    addLog(`⚠️ No duration for ${type}`);
+                    return;
+                }
+
+                setCountdownCard(card);
+                setCountdownType(type);
+                setTimeRemaining(duration);
+                setCountdownActive(true);
+                addLog(`⏱️ Started ${type} countdown: ${Math.floor(duration / 60)}m ${duration % 60}s`);
+            };
+
+            // Stop countdown
+            const stopCountdown = () => {
+                if (countdownIntervalRef.current) {
+                    clearInterval(countdownIntervalRef.current);
+                    countdownIntervalRef.current = null;
+                }
+                setCountdownActive(false);
+                setCountdownCard(null);
+                setCountdownType(null);
+                setTimeRemaining(0);
+                addLog('⏹️ Countdown stopped');
+            };
+
+            // Countdown timer effect
+            useEffect(() => {
+                if (countdownActive && timeRemaining > 0) {
+                    countdownIntervalRef.current = setInterval(() => {
+                        setTimeRemaining(prev => {
+                            if (prev <= 1) {
+                                // Timer finished
+                                clearInterval(countdownIntervalRef.current);
+                                countdownIntervalRef.current = null;
+                                setTimeout(() => {
+                                    setCountdownActive(false);
+                                    setCountdownCard(null);
+                                    setCountdownType(null);
+                                    playNotificationSound();
+                                    addLog('✅ Countdown completed!');
+                                }, 500);
+                                return 0;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+
+                    return () => {
+                        if (countdownIntervalRef.current) {
+                            clearInterval(countdownIntervalRef.current);
+                        }
+                    };
+                }
+            }, [countdownActive, timeRemaining]);
 
             // Load cards dynamically based on theme
             const loadCards = (selectedTheme) => {
@@ -1892,19 +2023,25 @@
                         (gameState?.queue || []).map((item, idx) =>
                             React.createElement('div', { className: 'card border-warning', key: idx },
                                 React.createElement('div', { className: 'card-body p-3' },
-                                React.createElement('div', { className: 'd-flex gap-2 flex-wrap mb-2' },
-                                    React.createElement('div', { className: 'text-center' },
-                                        React.createElement('span', { className: 'badge bg-primary d-block mb-1' }, item.position.name),
-                                        React.createElement('div', { style: { fontSize: '1.5rem' } }, item.position.emoji || '📍')
+                                React.createElement('div', { className: 'd-flex gap-2 flex-wrap mb-2 justify-content-between align-items-center' },
+                                    React.createElement('div', { className: 'd-flex gap-2 flex-wrap' },
+                                        React.createElement('div', { className: 'text-center' },
+                                            React.createElement('span', { className: 'badge bg-primary d-block mb-1' }, item.position.name),
+                                            React.createElement('div', { style: { fontSize: '1.5rem' } }, item.position.emoji || '📍')
+                                        ),
+                                        React.createElement('div', { className: 'text-center' },
+                                            React.createElement('span', { className: 'badge bg-danger d-block mb-1' }, item.intensity.name),
+                                            React.createElement('div', { style: { fontSize: '1.5rem' } }, item.intensity.emoji || '💪')
+                                        ),
+                                        React.createElement('div', { className: 'text-center' },
+                                            React.createElement('span', { className: 'badge bg-success d-block mb-1' }, item.time.name),
+                                            React.createElement('div', { style: { fontSize: '1.5rem' } }, item.time.emoji || '⏱️')
+                                        )
                                     ),
-                                    React.createElement('div', { className: 'text-center' },
-                                        React.createElement('span', { className: 'badge bg-danger d-block mb-1' }, item.intensity.name),
-                                        React.createElement('div', { style: { fontSize: '1.5rem' } }, item.intensity.emoji || '💪')
-                                    ),
-                                    React.createElement('div', { className: 'text-center' },
-                                        React.createElement('span', { className: 'badge bg-success d-block mb-1' }, item.time.name),
-                                        React.createElement('div', { style: { fontSize: '1.5rem' } }, item.time.emoji || '⏱️')
-                                    )
+                                    React.createElement('button', {
+                                        className: 'btn btn-sm btn-primary',
+                                        onClick: () => startCountdown(item, 'punishment')
+                                    }, '⏱️ Start Timer')
                                 ),
                                 item.equipment && item.equipment.length > 0 &&
                                 React.createElement('div', { className: 'd-flex gap-2 flex-wrap pt-2 border-top' },
@@ -1927,17 +2064,24 @@
                     React.createElement('div', { className: 'card-body' },
                         React.createElement('div', { className: 'd-flex gap-3 flex-wrap' },
                             (isPlayer1 ? gameState.player2.pleasureCards : myStats.pleasureCards).map((card, idx) =>
-                                React.createElement('div', {
-                                    className: 'game-card card-pleasure',
-                                    key: idx
-                                },
-                                    React.createElement('div', { className: 'card-body' },
-                                        card.emoji && React.createElement('div', { className: 'card-emoji' }, card.emoji),
-                                        React.createElement('div', { className: 'card-type' }, 'pleasure'),
-                                        React.createElement('div', { className: 'card-name' }, card.name),
-                                        card.description && React.createElement('div', { className: 'card-description' }, card.description),
-                                        card.duration && React.createElement('div', { className: 'card-description' }, card.duration)
-                                    )
+                                React.createElement('div', { key: idx, className: 'position-relative' },
+                                    React.createElement('div', {
+                                        className: 'game-card card-pleasure',
+                                        style: { marginBottom: '2.5rem' }
+                                    },
+                                        React.createElement('div', { className: 'card-body' },
+                                            card.emoji && React.createElement('div', { className: 'card-emoji' }, card.emoji),
+                                            React.createElement('div', { className: 'card-type' }, 'pleasure'),
+                                            React.createElement('div', { className: 'card-name' }, card.name),
+                                            card.description && React.createElement('div', { className: 'card-description' }, card.description),
+                                            card.duration && React.createElement('div', { className: 'card-description' }, card.duration)
+                                        )
+                                    ),
+                                    card.duration && card.duration !== 'null' && React.createElement('button', {
+                                        className: 'btn btn-sm btn-primary position-absolute',
+                                        style: { bottom: '-2rem', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap' },
+                                        onClick: () => startCountdown(card, 'pleasure')
+                                    }, '⏱️ Start Timer')
                                 )
                             )
                         )
@@ -1968,6 +2112,54 @@
                                         React.createElement('span', null, log.message)
                                     )
                                 )
+                        )
+                    )
+                ),
+
+                // Countdown Modal
+                countdownActive && React.createElement('div', { className: 'countdown-modal-overlay' },
+                    React.createElement('div', { className: 'countdown-container' },
+                        React.createElement('div', { className: 'countdown-title' },
+                            countdownType === 'punishment' ? '🔥 Punishment Timer' : '💝 Pleasure Timer'
+                        ),
+                        countdownCard && React.createElement('div', { className: 'countdown-card' },
+                            countdownType === 'punishment' && React.createElement('div', null,
+                                React.createElement('div', { className: 'd-flex gap-3 justify-content-center mb-3' },
+                                    React.createElement('div', { className: 'text-center' },
+                                        React.createElement('div', { style: { fontSize: '2rem' } }, countdownCard.position?.emoji || '📍'),
+                                        React.createElement('div', { className: 'small text-white' }, countdownCard.position?.name || '')
+                                    ),
+                                    React.createElement('div', { className: 'text-center' },
+                                        React.createElement('div', { style: { fontSize: '2rem' } }, countdownCard.intensity?.emoji || '💪'),
+                                        React.createElement('div', { className: 'small text-white' }, countdownCard.intensity?.name || '')
+                                    ),
+                                    React.createElement('div', { className: 'text-center' },
+                                        React.createElement('div', { style: { fontSize: '2rem' } }, countdownCard.time?.emoji || '⏱️'),
+                                        React.createElement('div', { className: 'small text-white' }, countdownCard.time?.name || '')
+                                    )
+                                ),
+                                countdownCard.equipment && countdownCard.equipment.length > 0 && React.createElement('div', { className: 'd-flex gap-2 flex-wrap justify-content-center' },
+                                    countdownCard.equipment.map((eq, idx) =>
+                                        React.createElement('span', { key: idx, className: 'badge bg-danger' },
+                                            eq.emoji ? `${eq.emoji} ${eq.name}` : eq.name
+                                        )
+                                    )
+                                )
+                            ),
+                            countdownType === 'pleasure' && React.createElement('div', { className: 'text-center' },
+                                React.createElement('div', { style: { fontSize: '3rem', marginBottom: '1rem' } }, countdownCard.emoji || '💝'),
+                                React.createElement('div', { style: { fontSize: '1.5rem', color: 'white', fontWeight: 'bold' } }, countdownCard.name),
+                                countdownCard.description && React.createElement('div', { className: 'text-muted mt-2' }, countdownCard.description)
+                            )
+                        ),
+                        React.createElement('div', { className: 'countdown-time' },
+                            `${Math.floor(timeRemaining / 60)}:${String(timeRemaining % 60).padStart(2, '0')}`
+                        ),
+                        React.createElement('div', { className: 'countdown-buttons' },
+                            React.createElement('button', {
+                                className: 'btn btn-danger btn-lg',
+                                onClick: stopCountdown
+                            }, '⏭️ Skip')
                         )
                     )
                 )
